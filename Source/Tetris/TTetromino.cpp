@@ -68,8 +68,8 @@ void ATTetromino::MakeShape()
 	// Clear the shape, because Dimension might change
 	Shape.Empty();
 
-	// Create shape depending on ShapeLetter, Super Rotation System (SRS)
-	// TODO(Ninjin42): Replace with custom Matrix struct
+	// Create shape depending on ShapeLetter, Super Rotation System (SRS), http://tetris.wikia.com/wiki/SRS
+	// TODO(Ninjin42): Replace with custom Matrix struct, this hardcoded style is super error-prone right now
 	switch(ShapeLetter)
 	{
 		case EShapeLetter::SL_I:
@@ -190,10 +190,9 @@ void ATTetromino::MakeShape()
 			break;
 	}
 
+	// Iterate through the shape, find blocks and set the location of visual representation accordingly
 	int32 LatestIndex = 0;
 	int32 LatestBlock = 0;
-	
-	/*UE_LOG(LogTemp,Warning,TEXT("ArraySize: %d"), Shape.Num() );*/
 
 	while(LatestIndex < Shape.Num())
 	{
@@ -204,15 +203,18 @@ void ATTetromino::MakeShape()
 		}	
 		LatestIndex++;
 	}
-		
+	
+	/*UE_LOG(LogTemp,Warning,TEXT("ArraySize: %d"), Shape.Num() );*/
 }
 
 FVector ATTetromino::IndexToRelativeLocation(int32 Index)
 {
+	// TODO(Ninjin42): Convert int32 to float properly later, function might be split to get an FVector2D with Row and Column,
+	// this FVector2D could be used to represent the TArray like an N-Dimensional array, if there is no switch to a proper Matrix representation for the shape
 	int32 Row = Index / ArrayDimension;
 	int32 Column = Index % ArrayDimension;
 
-	return FVector(SpriteSize * Column, 0.0f, SpriteSize * Row);
+	return FVector(SpriteSize * Column, 0.0f, SpriteSize * Row * -1.0f);
 }
 
 void ATTetromino::RotateClockwise()

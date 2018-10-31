@@ -11,7 +11,7 @@ class UPaperSprite;
 
 // Each letter could derive from this class and implement their own Init and Rotation function, but using an enum is quick and dirty
 // Also, could easily add a change letter function during Falling Phase
-UENUM(/*BlueprintType*/) //"BlueprintType" is essential specifier
+UENUM(/*BlueprintType*/) // Disabled for now since Code is might be written in C++ entirely
 enum class EShapeLetter : uint8
 {
     SL_I	UMETA(DisplayName = "I"),
@@ -25,7 +25,7 @@ enum class EShapeLetter : uint8
 
 // Google: "A tetromino is a geometric shape composed of four squares, connected orthogonally"
 // Representation with a flat out TArray, because multiple Dimension TArray seem to be broken and only a 4x4 Matrix is availabe in Unreal
-// TODO(Ninjin42): Make a new Struct for 2x2 and 3x3 Matrices with rotation functions
+// TODO(Ninjin42): Make a new Struct for 2x2, 3x3 and 4x4 Matrices with rotation functions, possibly abstract
 UCLASS()
 class TETRIS_API ATTetromino : public AActor
 {
@@ -40,6 +40,7 @@ class TETRIS_API ATTetromino : public AActor
 	UPROPERTY(VisibleDefaultsOnly)
 	USceneComponent* SceneDefault;
 
+	// Created manually to inspect in Editor
 	UPROPERTY(VisibleDefaultsOnly)
 	UPaperSpriteComponent* Block0;
 	UPROPERTY(VisibleDefaultsOnly)
@@ -48,28 +49,27 @@ class TETRIS_API ATTetromino : public AActor
 	UPaperSpriteComponent* Block2;
 	UPROPERTY(VisibleDefaultsOnly)
 	UPaperSpriteComponent* Block3;
+	// But still put into array for neat foreach loops functions
 	UPROPERTY(VisibleDefaultsOnly)
 	TArray<UPaperSpriteComponent*> Blocks;
 
+	// Visual Representation of each block
 	UPROPERTY(EditAnywhere, Category = "Assgin")
 	UPaperSprite* PaperSprite;
 
+	// PixelSize of Sprite to adjust block location
 	UPROPERTY(EditAnywhere, Category = "Assgin")
 	float SpriteSize;
 
+	// Color for every block
 	UPROPERTY(EditAnywhere, Category = "Assgin")
 	FLinearColor Color;
 
 	// Helper function when EShapeLetter is changed
 	void MakeShape();
 
+	// Helper function to convert One Dimensional Array to N-Dimensional Rows and Columns
 	FVector IndexToRelativeLocation(int32 Index);
-
-	void RotateClockwise();
-	void RotateCounterClockwise();
-
-	// Remove the block and destroy the actor completely if not other PaperSpriteComponent exists
-	void RemoveBlock();
 
 public:	
 	// Sets default values for this actor's properties
@@ -79,6 +79,13 @@ public:
 	#if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	#endif // WITH_EDITOR
+
+	// Functions to call from PlayerPawn
+	void RotateClockwise();
+	void RotateCounterClockwise();
+
+	// Remove the block and destroy the actor completely if no other PaperSpriteComponent exists
+	void RemoveBlock();
 
 protected:
 	// Called when the game starts or when spawned
