@@ -11,15 +11,6 @@ ATGrid::ATGrid()
 
 }
 
-void ATGrid::OnLanded(ATTetromino * TetrominoLast)
-{
-}
-
-bool ATGrid::IsInBounds(ATTetromino * TetrominoCurrent)
-{
-	return true;
-}
-
 // Called when the game starts or when spawned
 void ATGrid::BeginPlay()
 {
@@ -34,3 +25,12 @@ void ATGrid::Tick(float DeltaTime)
 
 }
 
+void ATGrid::OnLanded(ATTetromino * TetrominoLast)
+{
+
+}
+
+bool ATGrid::IsInBounds(ATTetromino * TetrominoCurrent)
+{
+	return true;
+}

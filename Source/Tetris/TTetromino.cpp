@@ -51,16 +51,37 @@ void ATTetromino::PostEditChangeProperty(FPropertyChangedEvent & PropertyChanged
 	}
 
 	MakeShape();
-
-	
 }
 #endif // WITH_EDITOR
+
+void ATTetromino::InitCustom(UPaperSprite* PaperSprite, FLinearColor Color)
+{
+	if(PaperSprite != nullptr)
+	{
+		for(UPaperSpriteComponent* BlockCurrent : Blocks)
+		{
+			BlockCurrent->SetSprite(PaperSprite);
+			BlockCurrent->SetSpriteColor(Color);
+		}
+	}
+
+	ShapeLetter = static_cast<EShapeLetter>( FMath::RandRange(0,6) );
+	MakeShape();
+}
 
 // Called when the game starts or when spawned
 void ATTetromino::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	//if(PaperSprite != nullptr)
+	//{
+	//	for(UPaperSpriteComponent* BlockCurrent : Blocks)
+	//	{
+	//		BlockCurrent->SetSprite(PaperSprite);
+	//		BlockCurrent->SetSpriteColor(Color);
+	//	}
+	//}
 }
 
 void ATTetromino::MakeShape()

@@ -32,6 +32,10 @@ void ATPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	SpawnNewTetronimo();
+	
+	GetWorldTimerManager().SetTimer(DropTetrominoOneUnitHandle, this, &ATPawn::OnDropTetrominoOneUnit, 1.0f, true, 2.0f);
+
 }
 
 // Called every frame
@@ -50,17 +54,19 @@ void ATPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("MoveRight", IE_Pressed, this, &ATPawn::MoveRight);
 	PlayerInputComponent->BindAction("MoveLeft", IE_Pressed, this, &ATPawn::MoveLeft);
 	PlayerInputComponent->BindAction("RotateClockwise", IE_Pressed, this, &ATPawn::RotateClockwise);
-	PlayerInputComponent->BindAction("RotateCounterClockwise", IE_Pressed, this, &ATPawn::RotateCounterClockwise);
+	PlayerInputComponent->BindAction("MoveDown", IE_Pressed, this, &ATPawn::MoveDown);
 }
 
 void ATPawn::MoveRight()
 {
-
+	// TODO(NINJIN42): Replace -32 by making SpriteSize public or implementing a FORCEINLINE Getter
+	TetronimoCurrent->AddActorWorldOffset(FVector(32.0f, 0.0f, 0.0f));
 }
 
 void ATPawn::MoveLeft()
 {
-
+	// TODO(NINJIN42): Replace -32 by making SpriteSize public or implementing a FORCEINLINE Getter
+	TetronimoCurrent->AddActorWorldOffset(FVector(-32.0f, 0.0f, 0.0f));
 }
 
 void ATPawn::RotateClockwise()
@@ -68,8 +74,26 @@ void ATPawn::RotateClockwise()
 
 }
 
-void ATPawn::RotateCounterClockwise()
+void ATPawn::MoveDown()
 {
 
 }
 #pragma endregion 
+
+void ATPawn::OnDropTetrominoOneUnit()
+{
+	// TODO(NINJIN42): Replace -32 by making SpriteSize public or implementing a FORCEINLINE Getter
+	TetronimoCurrent->AddActorWorldOffset(FVector(0.0f, 0.0f, -32.0f));
+}
+
+void ATPawn::SpawnNewTetronimo()
+{
+	FVector Location = FVector(0.0f);
+	FRotator Rotation = FRotator(0.0f);
+	
+	// TODO(NINJIN42): Use Deferred Spawning to wait for spawning until InitCustom is finished
+	TetronimoCurrent = GetWorld()->SpawnActor<ATTetromino>(Location, Rotation);
+	TetronimoCurrent->InitCustom(PaperSprite, Color);
+
+}
+

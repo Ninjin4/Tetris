@@ -75,6 +75,9 @@ public:
 	// Sets default values for this actor's properties
 	ATTetromino();
 
+	// Will be called after spawning the Tetromino
+	void InitCustom(UPaperSprite* PaperSprite, FLinearColor Color);
+
 	// Change EShapeLetter and Material
 	#if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
