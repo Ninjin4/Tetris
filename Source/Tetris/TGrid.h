@@ -16,12 +16,18 @@ class TETRIS_API ATGrid : public AActor
 	UPROPERTY()
 	TArray<int32> Grid;
 
+	UPROPERTY(EditAnywhere, Category = "Assign")
 	int32 Rows;
+	UPROPERTY(EditAnywhere, Category = "Assign")
 	int32 Columns;
 
 public:	
 	// Sets default values for this actor's properties
 	ATGrid();
+
+	#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	#endif // WITH_EDITOR
 
 	// Add the Tetromino to the Grid
 	void OnLanded(ATTetromino* TetrominoLast);

@@ -71,7 +71,7 @@ void ATPawn::MoveLeft()
 
 void ATPawn::RotateClockwise()
 {
-
+	TetronimoCurrent->RotateClockwise();
 }
 
 void ATPawn::MoveDown()
@@ -95,5 +95,13 @@ void ATPawn::SpawnNewTetronimo()
 	TetronimoCurrent = GetWorld()->SpawnActor<ATTetromino>(Location, Rotation);
 	TetronimoCurrent->InitCustom(PaperSprite, Color);
 
+	// The Deferred Spawning functions
+	//FTransform SpawnTransform(Rotation, Origin);
+	//UGameplayStatics::BeginDeferredActorSpawnFromClass(this, TetronimoCurrent::StaticClass(), SpawnTransform));
+	//if(TetronimoCurrent != nullptr)
+	//{
+	//	MyDeferredActor->Init(ShootDir);
+	//	UGameplayStatics::FinishSpawningActor(TetronimoCurrent, SpawnTransform);
+	//}
 }
 
