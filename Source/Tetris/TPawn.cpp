@@ -22,6 +22,8 @@ ATPawn::ATPawn()
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	Camera->SetProjectionMode(ECameraProjectionMode::Orthographic);
+	Camera->SetOrthoWidth(2048.0f);
 	#pragma endregion
 
 }
@@ -31,7 +33,7 @@ void ATPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	SpawnNewTetronimo();
+	SpawnNewTetromino();
 	
 	GetWorldTimerManager().SetTimer(DropTetrominoOneUnitHandle, this, &ATPawn::OnDropTetrominoOneUnit, 1.0f, true, 2.0f);
 
@@ -58,49 +60,44 @@ void ATPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void ATPawn::MoveRight()
 {
-	// TODO(NINJIN42): Replace -32 by making SpriteSize public or implementing a FORCEINLINE Getter
-	TetronimoCurrent->AddActorWorldOffset(FVector(32.0f, 0.0f, 0.0f));
+	Grid->MoveTetromino(TetrominoCurrent, FVector(100.0f, 0.0f, 0.0f));
 }
 
 void ATPawn::MoveLeft()
 {
-	// TODO(NINJIN42): Replace -32 by making SpriteSize public or implementing a FORCEINLINE Getter
-	TetronimoCurrent->AddActorWorldOffset(FVector(-32.0f, 0.0f, 0.0f));
-}
-
-void ATPawn::RotateClockwise()
-{
-	TetronimoCurrent->RotateClockwise();
-	Grid->IsInBounds(TetronimoCurrent);
+	Grid->MoveTetromino(TetrominoCurrent, FVector(-100.0f, 0.0f, 0.0f));
 }
 
 void ATPawn::MoveDown()
 {
+	Grid->MoveTetromino(TetrominoCurrent, FVector(0.0f, 0.0f, -100.0f));
+}
 
+void ATPawn::RotateClockwise()
+{
+	Grid->RotateTetromino(TetrominoCurrent);
 }
 #pragma endregion 
 
 void ATPawn::OnDropTetrominoOneUnit()
 {
-	// TODO(NINJIN42): Replace -32 by making SpriteSize public or implementing a FORCEINLINE Getter
-	TetronimoCurrent->AddActorWorldOffset(FVector(0.0f, 0.0f, -32.0f));
+	// TODO(NINJIN42): Replace -100 by making SpriteSize public or implementing a FORCEINLINE Getter
+	TetrominoCurrent->AddActorWorldOffset(FVector(0.0f, 0.0f, -100.0f));
 }
 
-void ATPawn::SpawnNewTetronimo()
+void ATPawn::SpawnNewTetromino()
 {
-	FVector Location = FVector(0.0f);
-	FRotator Rotation = FRotator(0.0f);
-	
+	int32 RandomTetromino = FMath::RandRange(0, TetrominoBPs.Num() - 1);
 	// TODO(NINJIN42): Use Deferred Spawning to wait for spawning until InitCustom is finished
-	TetronimoCurrent = GetWorld()->SpawnActor<ATTetromino>(TetronimoBP, Location, Rotation);
+	TetrominoCurrent = GetWorld()->SpawnActor<ATTetromino>(TetrominoBPs[RandomTetromino], Grid->SpawnLocation(), FRotator(0.0f));
 	
 	// The Deferred Spawning functions
 	//FTransform SpawnTransform(Rotation, Origin);
-	//UGameplayStatics::BeginDeferredActorSpawnFromClass(this, TetronimoCurrent::StaticClass(), SpawnTransform));
-	//if(TetronimoCurrent != nullptr)
+	//UGameplayStatics::BeginDeferredActorSpawnFromClass(this, TetrominoCurrent::StaticClass(), SpawnTransform));
+	//if(TetrominoCurrent != nullptr)
 	//{
 	//	MyDeferredActor->Init(ShootDir);
-	//	UGameplayStatics::FinishSpawningActor(TetronimoCurrent, SpawnTransform);
+	//	UGameplayStatics::FinishSpawningActor(TetrominoCurrent, SpawnTransform);
 	//}
 }
 

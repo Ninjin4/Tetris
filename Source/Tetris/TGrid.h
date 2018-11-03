@@ -29,6 +29,12 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	#endif // WITH_EDITOR
 
+	FVector SpawnLocation();
+
+	void MoveTetromino(ATTetromino* TetrominoLast, FVector Direction);
+
+	void RotateTetromino(ATTetromino* TetrominoLast);
+
 	// Add the Tetromino to the Grid
 	void OnLanded(ATTetromino* TetrominoLast);
 
@@ -36,14 +42,15 @@ public:
 	// TODO(Ninjin): Decide whether to use Tetromino directly and save a dependency or make the Tetromino Shapearray public (or stay private and copy that small thing)
 	bool IsInBounds(ATTetromino* TetrominoCurrent);
 
+	bool IsRotationValid(ATTetromino * TetrominoCurrent);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	
-	
 };
+
+FORCEINLINE int32 Index(int32 Row, int32 Column)
+{
+	return Row * Column + Column;
+}
+

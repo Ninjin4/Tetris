@@ -20,20 +20,25 @@ class TETRIS_API ATPawn : public APawn
 {
 	GENERATED_BODY()
 
+	// Might be useful if designer wants to change to Perspective Projection
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* SpringArm;
 
+	// Set to Orthographic by default
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* Camera; 
 
+	// Calls functions to Move/Rotate the Tetromino
 	UPROPERTY(EditAnywhere, Category = "Assgin")
 	ATGrid* Grid;
 
+	// All possible Tetrominos are made in Blueprint
 	UPROPERTY(EditAnywhere, Category = "Assgin")
-	TSubclassOf<ATTetromino> TetronimoBP;
+	TArray<TSubclassOf<ATTetromino>> TetrominoBPs;
 
+	// The current of the possible Tetrominos made in Blueprint
 	UPROPERTY()
-	ATTetromino* TetronimoCurrent;
+	ATTetromino* TetrominoCurrent;
 
 	// Player Input Functions
 	void MoveRight();
@@ -41,11 +46,13 @@ class TETRIS_API ATPawn : public APawn
 	void RotateClockwise();
 	void MoveDown();
 
-	void SpawnNewTetronimo();
+	// Spawns a new Tetromino
+	void SpawnNewTetromino();
 
 	// Timer to drop Tetromino every X seconds
 	FTimerHandle DropTetrominoOneUnitHandle;
 
+	// The corresponding function that will be called
 	UFUNCTION()
 	void OnDropTetrominoOneUnit();
 
