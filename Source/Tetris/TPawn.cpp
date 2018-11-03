@@ -24,7 +24,6 @@ ATPawn::ATPawn()
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	#pragma endregion
 
-
 }
 
 // Called when the game starts or when spawned
@@ -72,6 +71,7 @@ void ATPawn::MoveLeft()
 void ATPawn::RotateClockwise()
 {
 	TetronimoCurrent->RotateClockwise();
+	Grid->IsInBounds(TetronimoCurrent);
 }
 
 void ATPawn::MoveDown()
@@ -92,9 +92,8 @@ void ATPawn::SpawnNewTetronimo()
 	FRotator Rotation = FRotator(0.0f);
 	
 	// TODO(NINJIN42): Use Deferred Spawning to wait for spawning until InitCustom is finished
-	TetronimoCurrent = GetWorld()->SpawnActor<ATTetromino>(Location, Rotation);
-	TetronimoCurrent->InitCustom(PaperSprite, Color);
-
+	TetronimoCurrent = GetWorld()->SpawnActor<ATTetromino>(TetronimoBP, Location, Rotation);
+	
 	// The Deferred Spawning functions
 	//FTransform SpawnTransform(Rotation, Origin);
 	//UGameplayStatics::BeginDeferredActorSpawnFromClass(this, TetronimoCurrent::StaticClass(), SpawnTransform));

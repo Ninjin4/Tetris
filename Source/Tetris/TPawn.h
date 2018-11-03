@@ -26,23 +26,14 @@ class TETRIS_API ATPawn : public APawn
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* Camera; 
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Assgin")
 	ATGrid* Grid;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Assgin")
+	TSubclassOf<ATTetromino> TetronimoBP;
+
+	UPROPERTY()
 	ATTetromino* TetronimoCurrent;
-
-	// Visual Representation of each block
-	UPROPERTY(EditAnywhere, Category = "Assgin")
-	UPaperSprite* PaperSprite;
-
-	// PixelSize of Sprite to adjust block location
-	UPROPERTY(EditAnywhere, Category = "Assgin")
-	float SpriteSize;
-
-	// Color for every block
-	UPROPERTY(EditAnywhere, Category = "Assgin")
-	FLinearColor Color;
 
 	// Player Input Functions
 	void MoveRight();

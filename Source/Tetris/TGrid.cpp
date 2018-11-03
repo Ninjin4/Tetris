@@ -32,7 +32,18 @@ void ATGrid::PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent
 void ATGrid::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	int32 Width = (Rows + 2);
+	int32 Height =(Columns + 2);
+	Grid.Reserve(Width * Height);
+
+	for(int32 x = 0; x < Width; x++)
+	{
+		for(int32 y = 0; y < Height; y++)
+		{
+			Grid.Add((x == 0 || x == Width - 1 || y == 0 || y == Height - 1) ? 9 : 0);
+		}
+	}
 }
 
 // Called every frame
@@ -42,12 +53,20 @@ void ATGrid::Tick(float DeltaTime)
 
 }
 
-void ATGrid::OnLanded(ATTetromino * TetrominoLast)
+void ATGrid::OnLanded(ATTetromino* TetrominoLast)
 {
 
 }
 
-bool ATGrid::IsInBounds(ATTetromino * TetrominoCurrent)
+bool ATGrid::IsInBounds(ATTetromino* TetrominoCurrent)
 {
+	if (TetrominoCurrent[Index] == Grid[Index])
 	return true;
+}
+
+bool ATGrid::IsRotationValid(ATTetromino* TetrominoCurrent)
+{
+	TetrominoCurrent
+	if (TetrominoCurrent[Index] == Grid[Index])
+	return false
 }
