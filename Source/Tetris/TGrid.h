@@ -22,6 +22,19 @@ class TETRIS_API ATGrid : public AActor
 	UPROPERTY(EditAnywhere, Category = "Assign")
 	int32 Columns;
 
+	void SpawnNewTetromino();
+
+	// Helper function to find the array centre
+	FVector SpawnLocation();
+
+	// All possible Tetrominos are made in Blueprint
+	UPROPERTY(EditAnywhere, Category = "Assign")
+	TArray<TSubclassOf<ATTetromino>> TetrominoBPs;
+
+	// The current of the possible Tetrominos made in Blueprint
+	UPROPERTY()
+	ATTetromino* TetrominoCurrent;
+
 public:	
 	// Sets default values for this actor's properties
 	ATGrid();
@@ -30,24 +43,22 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	#endif // WITH_EDITOR
 
-	FVector SpawnLocation();
+	void MoveTetromino(FVector Direction);
 
-	void MoveTetromino(ATTetromino* TetrominoCurrent, FVector Direction);
+	void MoveTetrominoDown(FVector Direction);
 
-	void MoveTetrominoDown(ATTetromino* TetrominoCurrent, FVector Direction);
-
-	void RotateTetromino(ATTetromino* TetrominoCurrent);
+	void RotateTetromino();
 
 	// Add the Tetromino to the Grid
-	void OnLanded(ATTetromino* TetrominoCurrent);
+	void OnLanded();
 
 	// Check if the Tetromino is still in the game area
 	// TODO(Ninjin): Decide whether to use Tetromino directly and save a dependency or make the Tetromino Shapearray public (or stay private and copy that small thing)
-	bool IsInBounds(ATTetromino* TetrominoCurrent);
+	bool IsInBounds();
 
-	bool IsOnGround(ATTetromino* TetrominoCurrent);
+	bool IsOnGround();
 
-	bool IsRotationValid(ATTetromino * TetrominoCurrent);
+	bool IsRotationValid();
 
 protected:
 	// Called when the game starts or when spawned

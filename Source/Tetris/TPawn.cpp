@@ -5,7 +5,6 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "TGrid.h"
-#include "TTetromino.h"
 
 // Sets default values
 ATPawn::ATPawn()
@@ -33,8 +32,6 @@ void ATPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	SpawnNewTetromino();
-	
 	GetWorldTimerManager().SetTimer(DropTetrominoOneUnitHandle, this, &ATPawn::OnDropTetrominoOneUnit, 1.0f, true, 2.0f);
 
 }
@@ -60,43 +57,29 @@ void ATPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void ATPawn::MoveRight()
 {
-	Grid->MoveTetromino(TetrominoCurrent, FVector(100.0f, 0.0f, 0.0f));
+	Grid->MoveTetromino(FVector(100.0f, 0.0f, 0.0f));
 }
 
 void ATPawn::MoveLeft()
 {
-	Grid->MoveTetromino(TetrominoCurrent, FVector(-100.0f, 0.0f, 0.0f));
+	Grid->MoveTetromino(FVector(-100.0f, 0.0f, 0.0f));
 }
 
 void ATPawn::MoveDown()
 {
-	Grid->MoveTetrominoDown(TetrominoCurrent, FVector(0.0f, 0.0f, -100.0f));
+	Grid->MoveTetrominoDown(FVector(0.0f, 0.0f, -100.0f));
 }
 
 void ATPawn::RotateClockwise()
 {
-	Grid->RotateTetromino(TetrominoCurrent);
+	Grid->RotateTetromino();
 }
 #pragma endregion 
 
 void ATPawn::OnDropTetrominoOneUnit()
 {
-	Grid->MoveTetrominoDown(TetrominoCurrent, FVector(0.0f, 0.0f, -100.0f));
+	Grid->MoveTetrominoDown(FVector(0.0f, 0.0f, -100.0f));
 }
 
-void ATPawn::SpawnNewTetromino()
-{
-	int32 RandomTetromino = FMath::RandRange(0, TetrominoBPs.Num() - 1);
-	// TODO(NINJIN42): Use Deferred Spawning to wait for spawning until InitCustom is finished
-	TetrominoCurrent = GetWorld()->SpawnActor<ATTetromino>(TetrominoBPs[RandomTetromino], Grid->SpawnLocation(), FRotator(0.0f));
-	
-	// The Deferred Spawning functions
-	//FTransform SpawnTransform(Rotation, Origin);
-	//UGameplayStatics::BeginDeferredActorSpawnFromClass(this, TetrominoCurrent::StaticClass(), SpawnTransform));
-	//if(TetrominoCurrent != nullptr)
-	//{
-	//	MyDeferredActor->Init(ShootDir);
-	//	UGameplayStatics::FinishSpawningActor(TetrominoCurrent, SpawnTransform);
-	//}
-}
+
 

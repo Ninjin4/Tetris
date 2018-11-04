@@ -44,45 +44,43 @@ void ATGrid::BeginPlay()
 			Grid.Add(/*(x == 0 || x == Width - 1 || y == 0 || y == Height - 1) ? 9 : */0);
 		}
 	}
+
+	SpawnNewTetromino();
 }
 
-FVector ATGrid::SpawnLocation()
-{
-	return FVector((Columns-1)/2.0f * 100.0f, 0.0f, (Rows-1) * 100.0f);
-}
-
-void ATGrid::MoveTetromino(ATTetromino* TetrominoCurrent, FVector Direction)
+void ATGrid::MoveTetromino(FVector Direction)
 {
 	FVector PreMoveLocation = TetrominoCurrent->GetActorLocation();
 	TetrominoCurrent->AddActorWorldOffset(Direction);
-	if(!IsInBounds(TetrominoCurrent))
+	if(!IsInBounds())
 	{
 		TetrominoCurrent->SetActorLocation(PreMoveLocation);
 	}
 }
 
-void ATGrid::MoveTetrominoDown(ATTetromino* TetrominoCurrent, FVector Direction)
+void ATGrid::MoveTetrominoDown(FVector Direction)
 {
 	FVector PreMoveLocation = TetrominoCurrent->GetActorLocation();
 	TetrominoCurrent->AddActorWorldOffset(Direction);
-	if(!IsOnGround(TetrominoCurrent))
+	if(!IsOnGround())
 	{
 		TetrominoCurrent->SetActorLocation(PreMoveLocation);
-		// Tetromino hit the ground
+		// Tetromino hits the ground
+		SpawnNewTetromino();
 	}
 }
 
-void ATGrid::RotateTetromino(ATTetromino* TetrominoCurrent)
+void ATGrid::RotateTetromino()
 {
 	FRotator PreRotateRotation = TetrominoCurrent->GetActorRotation();
 	TetrominoCurrent->AddActorWorldRotation(FRotator(-90.0f, 0.0f, 0.0f));
-	if(!IsInBounds(TetrominoCurrent))
+	if(!IsInBounds())
 	{
 		TetrominoCurrent->SetActorRotation(PreRotateRotation);
 	}
 }
 
-bool ATGrid::IsInBounds(ATTetromino* TetrominoCurrent)
+bool ATGrid::IsInBounds()
 {
 	for(int32 i = 0; i < 4; i++)
 	{
@@ -94,7 +92,7 @@ bool ATGrid::IsInBounds(ATTetromino* TetrominoCurrent)
 	return true;
 }
 
-bool ATGrid::IsOnGround(ATTetromino* TetrominoCurrent)
+bool ATGrid::IsOnGround()
 {
 	for(int32 i = 0; i < 4; i++)
 	{
@@ -106,7 +104,7 @@ bool ATGrid::IsOnGround(ATTetromino* TetrominoCurrent)
 	return true;
 }
 
-bool ATGrid::IsRotationValid(ATTetromino* TetrominoCurrent)
+bool ATGrid::IsRotationValid()
 {
 	for(int32 i = 0; i < 4; i++)
 	{
@@ -119,7 +117,28 @@ bool ATGrid::IsRotationValid(ATTetromino* TetrominoCurrent)
 	return true;
 }
 
-void ATGrid::OnLanded(ATTetromino* TetrominoCurrent)
+void ATGrid::OnLanded()
 {
 
+}
+
+void ATGrid::SpawnNewTetromino()
+{
+	int32 RandomTetromino = FMath::RandRange(0, TetrominoBPs.Num() - 1);
+	// TODO(NINJIN42): Use Deferred Spawning to wait for spawning until InitCustom is finished
+	TetrominoCurrent = GetWorld()->SpawnActor<ATTetromino>(TetrominoBPs[RandomTetromino], SpawnLocation(), FRotator(0.0f));
+	
+	// The Deferred Spawning functions
+	//FTransform SpawnTransform(Rotation, Origin);
+	//UGameplayStatics::BeginDeferredActorSpawnFromClass(this, TetrominoCurrent::StaticClass(), SpawnTransform));
+	//if(TetrominoCurrent != nullptr)
+	//{
+	//	MyDeferredActor->Init(ShootDir);
+	//	UGameplayStatics::FinishSpawningActor(TetrominoCurrent, SpawnTransform);
+	//}
+}
+
+FVector ATGrid::SpawnLocation()
+{
+	return FVector((Columns-1)/2.0f * 100.0f, 0.0f, (Rows-1) * 100.0f);
 }

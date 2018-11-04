@@ -9,7 +9,6 @@
 class USpringArmComponent;
 class UCameraComponent;
 class ATGrid;
-class ATTetromino;
 class UPaperSprite;
 
 // Handles all game logic, because it has easy access to input, controllers, is already part of gamemode
@@ -32,13 +31,7 @@ class TETRIS_API ATPawn : public APawn
 	UPROPERTY(EditAnywhere, Category = "Assign")
 	ATGrid* Grid;
 
-	// All possible Tetrominos are made in Blueprint
-	UPROPERTY(EditAnywhere, Category = "Assign")
-	TArray<TSubclassOf<ATTetromino>> TetrominoBPs;
 
-	// The current of the possible Tetrominos made in Blueprint
-	UPROPERTY()
-	ATTetromino* TetrominoCurrent;
 
 	// Player Input Functions
 	void MoveRight();
