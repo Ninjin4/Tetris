@@ -34,6 +34,8 @@ public:
 
 	void MoveTetromino(ATTetromino* TetrominoCurrent, FVector Direction);
 
+	void MoveTetrominoDown(ATTetromino* TetrominoCurrent, FVector Direction);
+
 	void RotateTetromino(ATTetromino* TetrominoCurrent);
 
 	// Add the Tetromino to the Grid
@@ -42,6 +44,8 @@ public:
 	// Check if the Tetromino is still in the game area
 	// TODO(Ninjin): Decide whether to use Tetromino directly and save a dependency or make the Tetromino Shapearray public (or stay private and copy that small thing)
 	bool IsInBounds(ATTetromino* TetrominoCurrent);
+
+	bool IsOnGround(ATTetromino* TetrominoCurrent);
 
 	bool IsRotationValid(ATTetromino * TetrominoCurrent);
 

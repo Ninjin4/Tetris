@@ -70,7 +70,7 @@ void ATPawn::MoveLeft()
 
 void ATPawn::MoveDown()
 {
-	Grid->MoveTetromino(TetrominoCurrent, FVector(0.0f, 0.0f, -100.0f));
+	Grid->MoveTetrominoDown(TetrominoCurrent, FVector(0.0f, 0.0f, -100.0f));
 }
 
 void ATPawn::RotateClockwise()
@@ -81,8 +81,7 @@ void ATPawn::RotateClockwise()
 
 void ATPawn::OnDropTetrominoOneUnit()
 {
-	// TODO(NINJIN42): Replace -100 by making SpriteSize public or implementing a FORCEINLINE Getter
-	TetrominoCurrent->AddActorWorldOffset(FVector(0.0f, 0.0f, -100.0f));
+	Grid->MoveTetrominoDown(TetrominoCurrent, FVector(0.0f, 0.0f, -100.0f));
 }
 
 void ATPawn::SpawnNewTetromino()

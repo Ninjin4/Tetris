@@ -33,22 +33,22 @@ void ATGrid::BeginPlay()
 {
 	Super::BeginPlay();
 
-	int32 Width = (Rows + 2);
-	int32 Height = (Columns + 2);
+	int32 Width = Rows;
+	int32 Height = Columns;
 	Grid.Reserve(Width * Height);
 
 	for(int32 x = 0; x < Width; x++)
 	{
 		for(int32 y = 0; y < Height; y++)
 		{
-			Grid.Add((x == 0 || x == Width - 1 || y == 0 || y == Height - 1) ? 9 : 0);
+			Grid.Add(/*(x == 0 || x == Width - 1 || y == 0 || y == Height - 1) ? 9 : */0);
 		}
 	}
 }
 
 FVector ATGrid::SpawnLocation()
 {
-	return FVector((Rows-1) * 100.0f, 0.0f, (Columns-1)/2 * 100.0f);
+	return FVector((Columns-1)/2.0f * 100.0f, 0.0f, (Rows-1) * 100.0f);
 }
 
 void ATGrid::MoveTetromino(ATTetromino* TetrominoCurrent, FVector Direction)
@@ -61,14 +61,25 @@ void ATGrid::MoveTetromino(ATTetromino* TetrominoCurrent, FVector Direction)
 	}
 }
 
-void ATGrid::RotateTetromino(ATTetromino* TetrominoCurrent)
+void ATGrid::MoveTetrominoDown(ATTetromino* TetrominoCurrent, FVector Direction)
 {
-	TetrominoCurrent->RotateClockwise();
+	FVector PreMoveLocation = TetrominoCurrent->GetActorLocation();
+	TetrominoCurrent->AddActorWorldOffset(Direction);
+	if(!IsOnGround(TetrominoCurrent))
+	{
+		TetrominoCurrent->SetActorLocation(PreMoveLocation);
+		// Tetromino hit the ground
+	}
 }
 
-void ATGrid::OnLanded(ATTetromino* TetrominoCurrent)
+void ATGrid::RotateTetromino(ATTetromino* TetrominoCurrent)
 {
-
+	FRotator PreRotateRotation = TetrominoCurrent->GetActorRotation();
+	TetrominoCurrent->AddActorWorldRotation(FRotator(-90.0f, 0.0f, 0.0f));
+	if(!IsInBounds(TetrominoCurrent))
+	{
+		TetrominoCurrent->SetActorRotation(PreRotateRotation);
+	}
 }
 
 bool ATGrid::IsInBounds(ATTetromino* TetrominoCurrent)
@@ -80,7 +91,18 @@ bool ATGrid::IsInBounds(ATTetromino* TetrominoCurrent)
 			return false;
 		}
 	}
+	return true;
+}
 
+bool ATGrid::IsOnGround(ATTetromino* TetrominoCurrent)
+{
+	for(int32 i = 0; i < 4; i++)
+	{
+		if(TetrominoCurrent->GetGridPositionFromWorld(i).Row < 0)
+		{
+			return false;
+		}
+	}
 	return true;
 }
 
@@ -95,4 +117,9 @@ bool ATGrid::IsRotationValid(ATTetromino* TetrominoCurrent)
 	}
 
 	return true;
+}
+
+void ATGrid::OnLanded(ATTetromino* TetrominoCurrent)
+{
+
 }
