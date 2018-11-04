@@ -32,6 +32,8 @@ ATTetromino::ATTetromino()
 	Blocks.Emplace(Block1);
 	Blocks.Emplace(Block2);
 	Blocks.Emplace(Block3);
+
+	GridPosition = FIntVector2D();
 }
 
 #if WITH_EDITOR
@@ -66,9 +68,11 @@ void ATTetromino::RotateCounterClockwise()
 {
 }
 
-FVector2D ATTetromino::GetWorldIndices(int32 Blockelement)
+FIntVector2D ATTetromino::GetGridPositionFromWorld(int32 Blockelement)
 {
-	return FVector2D(Blocks[Blockelement]->GetComponentLocation().X, Blocks[Blockelement]->GetComponentLocation().Z);
+	GridPosition.Column = FMath::TruncToInt(Blocks[Blockelement]->GetComponentLocation().X / 100.0f);
+	GridPosition.Row = FMath::TruncToInt(Blocks[Blockelement]->GetComponentLocation().Z / 100.0f);
+	return GridPosition;
 }
 
 void ATTetromino::RemoveBlock()

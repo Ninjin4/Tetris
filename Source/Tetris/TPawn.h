@@ -29,11 +29,11 @@ class TETRIS_API ATPawn : public APawn
 	UCameraComponent* Camera; 
 
 	// Calls functions to Move/Rotate the Tetromino
-	UPROPERTY(EditAnywhere, Category = "Assgin")
+	UPROPERTY(EditAnywhere, Category = "Assign")
 	ATGrid* Grid;
 
 	// All possible Tetrominos are made in Blueprint
-	UPROPERTY(EditAnywhere, Category = "Assgin")
+	UPROPERTY(EditAnywhere, Category = "Assign")
 	TArray<TSubclassOf<ATTetromino>> TetrominoBPs;
 
 	// The current of the possible Tetrominos made in Blueprint

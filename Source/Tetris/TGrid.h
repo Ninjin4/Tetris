@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "TTetromino.h"
 #include "TGrid.generated.h"
 
 class ATTetromino;
@@ -31,12 +32,12 @@ public:
 
 	FVector SpawnLocation();
 
-	void MoveTetromino(ATTetromino* TetrominoLast, FVector Direction);
+	void MoveTetromino(ATTetromino* TetrominoCurrent, FVector Direction);
 
-	void RotateTetromino(ATTetromino* TetrominoLast);
+	void RotateTetromino(ATTetromino* TetrominoCurrent);
 
 	// Add the Tetromino to the Grid
-	void OnLanded(ATTetromino* TetrominoLast);
+	void OnLanded(ATTetromino* TetrominoCurrent);
 
 	// Check if the Tetromino is still in the game area
 	// TODO(Ninjin): Decide whether to use Tetromino directly and save a dependency or make the Tetromino Shapearray public (or stay private and copy that small thing)
@@ -47,10 +48,12 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	FORCEINLINE int32 Index(struct FIntVector2D GridPosition)
+	{
+		return GridPosition.Row * Columns + GridPosition.Column;
+	}
 };
 
-FORCEINLINE int32 Index(int32 Row, int32 Column)
-{
-	return Row * Column + Column;
-}
+
 

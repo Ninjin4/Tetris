@@ -9,6 +9,22 @@
 class UPaperSpriteComponent;
 class UPaperSprite;
 
+USTRUCT(BlueprintType)
+struct FIntVector2D
+{
+    GENERATED_BODY()
+	
+public:
+	int32 Row;
+	int32 Column;
+
+	FIntVector2D()
+	{
+		Row = 999;
+		Column = 999;
+	}
+};
+
 UCLASS()
 class TETRIS_API ATTetromino : public AActor
 {
@@ -34,6 +50,8 @@ class TETRIS_API ATTetromino : public AActor
 	UPROPERTY(EditAnywhere, Category = "Assign")
 	FLinearColor Color;
 
+	FIntVector2D GridPosition;
+
 public:	
 	// Sets default values for this actor's properties
 	ATTetromino();
@@ -46,7 +64,7 @@ public:
 	void RotateClockwise();
 	void RotateCounterClockwise();
 
-	FVector2D GetWorldIndices(int32 Blockelement);
+	FIntVector2D GetGridPositionFromWorld(int32 Blockelement);
 
 	// Remove the block and destroy the actor completely if no other PaperSpriteComponent exists
 	void RemoveBlock();

@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "TGrid.h"
-#include "TTetromino.h"
 
 // Sets default values
 ATGrid::ATGrid()
@@ -52,22 +51,22 @@ FVector ATGrid::SpawnLocation()
 	return FVector((Rows-1) * 100.0f, 0.0f, (Columns-1)/2 * 100.0f);
 }
 
-void ATGrid::MoveTetromino(ATTetromino* TetrominoLast, FVector Direction)
+void ATGrid::MoveTetromino(ATTetromino* TetrominoCurrent, FVector Direction)
 {
-	FVector PreMoveLocation = TetrominoLast->GetActorLocation();
-	TetrominoLast->AddActorWorldOffset(Direction);
-	if(!IsInBounds(TetrominoLast))
+	FVector PreMoveLocation = TetrominoCurrent->GetActorLocation();
+	TetrominoCurrent->AddActorWorldOffset(Direction);
+	if(!IsInBounds(TetrominoCurrent))
 	{
-		TetrominoLast->SetActorLocation(PreMoveLocation);
+		TetrominoCurrent->SetActorLocation(PreMoveLocation);
 	}
 }
 
-void ATGrid::RotateTetromino(ATTetromino* TetrominoLast)
+void ATGrid::RotateTetromino(ATTetromino* TetrominoCurrent)
 {
-	TetrominoLast->RotateClockwise();
+	TetrominoCurrent->RotateClockwise();
 }
 
-void ATGrid::OnLanded(ATTetromino* TetrominoLast)
+void ATGrid::OnLanded(ATTetromino* TetrominoCurrent)
 {
 
 }
@@ -76,11 +75,7 @@ bool ATGrid::IsInBounds(ATTetromino* TetrominoCurrent)
 {
 	for(int32 i = 0; i < 4; i++)
 	{
-		FVector2D WorldIndices = TetrominoCurrent->GetWorldIndices(i);
-		int32 Rows = FMath::TruncToInt(WorldIndices.X);
-		int32 Columns = FMath::TruncToInt(WorldIndices.Y); 
-
-		if(Grid[Index(Rows, Columns)] != 0)
+		if(TetrominoCurrent->GetGridPositionFromWorld(i).Column < 0 || TetrominoCurrent->GetGridPositionFromWorld(i).Column > Columns)
 		{
 			return false;
 		}
@@ -93,11 +88,7 @@ bool ATGrid::IsRotationValid(ATTetromino* TetrominoCurrent)
 {
 	for(int32 i = 0; i < 4; i++)
 	{
-		FVector2D WorldIndices = TetrominoCurrent->GetWorldIndices(i);
-		int32 Rows = FMath::TruncToInt(WorldIndices.X);
-		int32 Columns = FMath::TruncToInt(WorldIndices.Y); 
-
-		if(Grid[Index(Rows, Columns)] != 0)
+		if(Grid[Index(TetrominoCurrent->GetGridPositionFromWorld(i))] != 0)
 		{
 			return false;
 		}
