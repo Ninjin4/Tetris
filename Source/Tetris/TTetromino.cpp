@@ -32,8 +32,6 @@ ATTetromino::ATTetromino()
 	Blocks.Emplace(Block1);
 	Blocks.Emplace(Block2);
 	Blocks.Emplace(Block3);
-
-	GridPosition = FIntVector2D();
 }
 
 #if WITH_EDITOR
@@ -48,35 +46,9 @@ void ATTetromino::PostEditChangeProperty(FPropertyChangedEvent & PropertyChanged
 }
 #endif // WITH_EDITOR
 
-// Called when the game starts or when spawned
-void ATTetromino::BeginPlay()
-{
-	Super::BeginPlay();
-
-}
-
-void ATTetromino::RotateClockwise()
-{
-	AddActorWorldRotation(FRotator(-90.0f, 0.0f, 0.0f));
-	//for(UPaperSpriteComponent* Block : Blocks)
-	//{
-	//	Block->AddRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
-	//}
-}
-
-void ATTetromino::RotateCounterClockwise()
-{
-}
-
 FIntVector2D ATTetromino::GetGridPositionFromWorld(int32 Blockelement)
 {
-	GridPosition.Column = FMath::TruncToInt(Blocks[Blockelement]->GetComponentLocation().X / 100.0f);
-	GridPosition.Row = FMath::TruncToInt(Blocks[Blockelement]->GetComponentLocation().Z / 100.0f);
+	FIntVector2D GridPosition = FIntVector2D(FMath::RoundToInt(Blocks[Blockelement]->GetComponentLocation().Z / 100.0f),
+		FMath::RoundToInt(Blocks[Blockelement]->GetComponentLocation().X / 100.0f));
 	return GridPosition;
 }
-
-void ATTetromino::RemoveBlock()
-{
-
-}
-

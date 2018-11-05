@@ -14,6 +14,9 @@ class TETRIS_API ATGrid : public AActor
 {
 	GENERATED_BODY()
 	
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* SceneDefault;
+
 	UPROPERTY()
 	TArray<int32> Grid;
 
@@ -21,6 +24,9 @@ class TETRIS_API ATGrid : public AActor
 	int32 Rows;
 	UPROPERTY(EditAnywhere, Category = "Assign")
 	int32 Columns;
+
+	// Buffer on top when Tetromino and player rotates
+	int32 RowsBuffer;
 
 	void SpawnNewTetromino();
 
@@ -32,13 +38,26 @@ class TETRIS_API ATGrid : public AActor
 	TArray<TSubclassOf<ATTetromino>> TetrominoBPs;
 
 	// The current of the possible Tetrominos made in Blueprint
-	UPROPERTY()
+	UPROPERTY(VisibleDefaultsOnly)
 	ATTetromino* TetrominoCurrent;
+
+	UPROPERTY(VisibleDefaultsOnly)
+	TArray<UPaperSpriteComponent*> Blocks;
+
+	// Helper functions when moving the Tetromino
+	bool IsOutOfBounds();
+	bool IsBelowGround();
+	bool IsBlockedByGridBlocks();
+
+	void AddToGrid();
+	void CheckGridForFullLines();
+	void DeleteLine(int32 Row);
 
 public:	
 	// Sets default values for this actor's properties
 	ATGrid();
 
+	// Only here if Outer Grid will be replaced by other visual blocks and if it should be made procedural
 	#if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	#endif // WITH_EDITOR
@@ -49,26 +68,13 @@ public:
 
 	void RotateTetromino();
 
-	// Add the Tetromino to the Grid
-	void OnLanded();
-
-	// Check if the Tetromino is still in the game area
-	// TODO(Ninjin): Decide whether to use Tetromino directly and save a dependency or make the Tetromino Shapearray public (or stay private and copy that small thing)
-	bool IsInBounds();
-
-	bool IsOnGround();
-
-	bool IsRotationValid();
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	FORCEINLINE int32 Index(struct FIntVector2D GridPosition)
+	// Calculates the corresponding Index for the 2D Location
+	FORCEINLINE int32 Index(FIntVector2D GridPosition)
 	{
 		return GridPosition.Row * Columns + GridPosition.Column;
 	}
 };
-
-
-

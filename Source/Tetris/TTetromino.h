@@ -20,9 +20,12 @@ public:
 
 	FIntVector2D()
 	{
-		Row = 999;
-		Column = 999;
+		Row = 99;
+		Column = 99;
 	}
+
+	FIntVector2D(int32 Row, int32 Column)
+		: Row(Row), Column(Column) {}
 };
 
 UCLASS()
@@ -42,17 +45,17 @@ class TETRIS_API ATTetromino : public AActor
 	UPaperSpriteComponent* Block2;
 	UPROPERTY(VisibleDefaultsOnly)
 	UPaperSpriteComponent* Block3;
-	// But still put into array to be able to use foreach loops
-	UPROPERTY(VisibleDefaultsOnly)
-	TArray<UPaperSpriteComponent*> Blocks;
 
 	// Helper variable to bulk edit Sprite Color
 	UPROPERTY(EditAnywhere, Category = "Assign")
 	FLinearColor Color;
 
-	FIntVector2D GridPosition;
+public:
+	// Save all Paperspritecomponents in an array, so you can use foreach on all components
+	// TODO(NINJIN42): Public access for Grid to call functions for PaperSpriteComponent, this kinda breaks encapsulation and needs a proper public function for Grid
+	UPROPERTY(VisibleDefaultsOnly)
+	TArray<UPaperSpriteComponent*> Blocks;
 
-public:	
 	// Sets default values for this actor's properties
 	ATTetromino();
 
@@ -60,18 +63,6 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	#endif // WITH_EDITOR
 
-	// Functions to call from PlayerPawn
-	void RotateClockwise();
-	void RotateCounterClockwise();
-
 	FIntVector2D GetGridPositionFromWorld(int32 Blockelement);
 
-	// Remove the block and destroy the actor completely if no other PaperSpriteComponent exists
-	void RemoveBlock();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-	
 };
-

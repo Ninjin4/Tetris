@@ -32,7 +32,7 @@ void ATPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	GetWorldTimerManager().SetTimer(DropTetrominoOneUnitHandle, this, &ATPawn::OnDropTetrominoOneUnit, 1.0f, true, 2.0f);
+	GetWorldTimerManager().SetTimer(DropTetrominoOneUnitHandle, this, &ATPawn::OnDropTetrominoOneUnit, 0.25f, true, 2.0f);
 
 }
 
@@ -80,6 +80,3 @@ void ATPawn::OnDropTetrominoOneUnit()
 {
 	Grid->MoveTetrominoDown(FVector(0.0f, 0.0f, -100.0f));
 }
-
-
-

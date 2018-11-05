@@ -31,16 +31,11 @@ class TETRIS_API ATPawn : public APawn
 	UPROPERTY(EditAnywhere, Category = "Assign")
 	ATGrid* Grid;
 
-
-
 	// Player Input Functions
 	void MoveRight();
 	void MoveLeft();
 	void RotateClockwise();
 	void MoveDown();
-
-	// Spawns a new Tetromino
-	void SpawnNewTetromino();
 
 	// Timer to drop Tetromino every X seconds
 	FTimerHandle DropTetrominoOneUnitHandle;
@@ -63,6 +58,4 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-	
 };
