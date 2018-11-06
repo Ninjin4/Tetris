@@ -107,7 +107,6 @@ void ATGrid::AddToGrid()
 	for(int32 i = 0; i < 4; i++)
 	{
 		Blocks[Index(TetrominoCurrent->GetBlockPositionFromWorld(i))] = TetrominoCurrent->Blocks[i];
-		UE_LOG(LogTemp, Warning, TEXT("Index: %d"), Index(TetrominoCurrent->GetBlockPositionFromWorld(i)));
 		TetrominoCurrent->Blocks[i]->Rename(nullptr, this);
 	}
 
@@ -132,7 +131,7 @@ void ATGrid::CheckGridForFullLines()
 		{
 			DeleteLine(RowCurrent);
 			// Hack for now, will check from bottom again, obviously can be made smarter but takes more time
-			RowCurrent = 0;
+			RowCurrent--;
 		}
 	}
 }
@@ -142,13 +141,15 @@ void ATGrid::DeleteLine(int32 Row)
 	for(int32 ColumnCurrent = 0; ColumnCurrent < Columns; ColumnCurrent++)
 	{
 		Blocks[Index(FIntVector2D(Row, ColumnCurrent))]->SetVisibility(false);
+		Blocks[Index(FIntVector2D(Row, ColumnCurrent))]->DestroyComponent();
 	}
 	Blocks.RemoveAt(Index(FIntVector2D(Row, 0)), Columns);
-	for(UPaperSpriteComponent* Block : Blocks)
+
+	for(int32 StartElement = Index(FIntVector2D(Row, 0)); StartElement < Blocks.Num(); StartElement++)
 	{
-		if(Block)
+		if(Blocks[StartElement])
 		{
-			Block->AddWorldOffset(FVector(0.0f, 0.0f, -100.0f));
+			Blocks[StartElement]->AddWorldOffset(FVector(0.0f, 0.0f, -100.0f));
 		}
 	}
 	for(int32 i = 0; i < Columns; i++)
