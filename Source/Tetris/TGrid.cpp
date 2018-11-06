@@ -32,15 +32,13 @@ void ATGrid::BeginPlay()
 	Super::BeginPlay();
 
 	RowsBuffer = Rows + 4;
-	Grid.Reserve(Columns * RowsBuffer);
 
-	for(int32 x = 0; x < Columns; x++)
+	Blocks.Reserve(Columns * RowsBuffer);
+	for(int32 i = 0; i < Columns * RowsBuffer; i++)
 	{
-		for(int32 y = 0; y < RowsBuffer; y++)
-		{
-			Grid.Add(0);
-		}
+		Blocks.Emplace(nullptr);
 	}
+
 	SpawnNewTetromino();
 }
 
@@ -48,7 +46,7 @@ void ATGrid::MoveTetromino(FVector Direction)
 {
 	FVector PreMoveLocation = TetrominoCurrent->GetActorLocation();
 	TetrominoCurrent->AddActorWorldOffset(Direction);
-	if(IsOutOfBounds() || IsBlockedByGridBlocks())
+	if(IsTetrominoOutOfBoundsVertical() || AreTetrominoBlocksBlockedByBlocks())
 	{
 		TetrominoCurrent->SetActorLocation(PreMoveLocation);
 	}
@@ -58,10 +56,12 @@ void ATGrid::MoveTetrominoDown(FVector Direction)
 {
 	FVector PreMoveLocation = TetrominoCurrent->GetActorLocation();
 	TetrominoCurrent->AddActorWorldOffset(Direction);
-	if(IsBelowGround() || IsBlockedByGridBlocks())
+	if(IsTetrominoBelowGround() || AreTetrominoBlocksBlockedByBlocks())
 	{
-		TetrominoCurrent->SetActorLocation(PreMoveLocation);
 		// Tetromino just hit the ground
+
+		TetrominoCurrent->SetActorLocation(PreMoveLocation);
+		
 		AddToGrid();
 
 		CheckGridForFullLines();
@@ -74,41 +74,27 @@ void ATGrid::RotateTetromino()
 {
 	FRotator PreRotateRotation = TetrominoCurrent->GetActorRotation();
 	TetrominoCurrent->AddActorWorldRotation(FRotator(-90.0f, 0.0f, 0.0f));
-	if(IsOutOfBounds() || IsBelowGround() || IsBlockedByGridBlocks())
+	if(IsTetrominoOutOfBoundsVertical() || IsTetrominoBelowGround() || AreTetrominoBlocksBlockedByBlocks())
 	{
 		TetrominoCurrent->SetActorRotation(PreRotateRotation);
 	}
 }
 
-bool ATGrid::IsOutOfBounds()
+bool ATGrid::IsTetrominoOutOfBoundsVertical()
 {
-	for(int32 i = 0; i < 4; i++)
-	{
-		if(TetrominoCurrent->GetGridPositionFromWorld(i).Column < 0 || TetrominoCurrent->GetGridPositionFromWorld(i).Column > Columns)
-		{
-			return true;
-		}
-	}
-	return false;
+	return TetrominoCurrent->IsOutOfBoundsVertical(Columns);
 }
 
-bool ATGrid::IsBelowGround()
+bool ATGrid::IsTetrominoBelowGround()
 {
-	for(int32 i = 0; i < 4; i++)
-	{
-		if(TetrominoCurrent->GetGridPositionFromWorld(i).Row < 0)
-		{
-			return true;
-		}
-	}
-	return false;
+	return TetrominoCurrent->IsBelowGround();
 }
 
-bool ATGrid::IsBlockedByGridBlocks()
+bool ATGrid::AreTetrominoBlocksBlockedByBlocks()
 {
 	for(int32 i = 0; i < 4; i++)
 	{
-		if(Grid[Index(TetrominoCurrent->GetGridPositionFromWorld(i))] != 0)
+		if(Blocks[Index(TetrominoCurrent->GetBlockPositionFromWorld(i))] != nullptr)
 		{
 			return true;
 		}
@@ -120,8 +106,8 @@ void ATGrid::AddToGrid()
 {
 	for(int32 i = 0; i < 4; i++)
 	{
-		Grid[Index(TetrominoCurrent->GetGridPositionFromWorld(i))] = 1;
-		Blocks.Emplace(TetrominoCurrent->Blocks[i]);
+		Blocks[Index(TetrominoCurrent->GetBlockPositionFromWorld(i))] = TetrominoCurrent->Blocks[i];
+		UE_LOG(LogTemp, Warning, TEXT("Index: %d"), Index(TetrominoCurrent->GetBlockPositionFromWorld(i)));
 		TetrominoCurrent->Blocks[i]->Rename(nullptr, this);
 	}
 
@@ -131,39 +117,43 @@ void ATGrid::AddToGrid()
 
 void ATGrid::CheckGridForFullLines()
 {
-	for(int32 x = 0; x < Rows; x++)
+	for(int32 RowCurrent = 0; RowCurrent < Rows; RowCurrent++)
 	{
 		bool bFullLine = true;
-		for(int32 y = 0; y < Columns; y++)
+		for(int32 ColumnCurrent = 0; ColumnCurrent < Columns; ColumnCurrent++)
 		{
-			if(Grid[Index(FIntVector2D(x, y))] != 0)
+			if(Blocks[Index(FIntVector2D(RowCurrent, ColumnCurrent))] == nullptr)
 			{
 				bFullLine = false;
+				break;
 			}
 		}
 		if(bFullLine)
 		{
-			DeleteLine(x);
+			DeleteLine(RowCurrent);
+			// Hack for now, will check from bottom again, obviously can be made smarter but takes more time
+			RowCurrent = 0;
 		}
 	}
 }
 
 void ATGrid::DeleteLine(int32 Row)
 {
-	for(int32 y = 0; y < Columns; y++)
+	for(int32 ColumnCurrent = 0; ColumnCurrent < Columns; ColumnCurrent++)
 	{
-		Blocks[Index(FIntVector2D(Row, y))]->SetVisibility(false);
+		Blocks[Index(FIntVector2D(Row, ColumnCurrent))]->SetVisibility(false);
 	}
-	Blocks.RemoveAt(Index(FIntVector2D(Row, Columns)), Columns);
+	Blocks.RemoveAt(Index(FIntVector2D(Row, 0)), Columns);
 	for(UPaperSpriteComponent* Block : Blocks)
 	{
-		Block->AddWorldOffset(FVector(0.0f, 0.0f, -100.0f));
+		if(Block)
+		{
+			Block->AddWorldOffset(FVector(0.0f, 0.0f, -100.0f));
+		}
 	}
-
-	Grid.RemoveAt(Row, Columns);
-	for(int32 y = 0; y < Columns; y++)
+	for(int32 i = 0; i < Columns; i++)
 	{
-		Grid.Add(0);
+		Blocks.Emplace(nullptr);
 	}
 }
 

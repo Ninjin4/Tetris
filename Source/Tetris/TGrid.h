@@ -17,9 +17,6 @@ class TETRIS_API ATGrid : public AActor
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* SceneDefault;
 
-	UPROPERTY()
-	TArray<int32> Grid;
-
 	UPROPERTY(EditAnywhere, Category = "Assign")
 	int32 Rows;
 	UPROPERTY(EditAnywhere, Category = "Assign")
@@ -45,9 +42,9 @@ class TETRIS_API ATGrid : public AActor
 	TArray<UPaperSpriteComponent*> Blocks;
 
 	// Helper functions when moving the Tetromino
-	bool IsOutOfBounds();
-	bool IsBelowGround();
-	bool IsBlockedByGridBlocks();
+	bool IsTetrominoOutOfBoundsVertical();
+	bool IsTetrominoBelowGround();
+	bool AreTetrominoBlocksBlockedByBlocks();
 
 	void AddToGrid();
 	void CheckGridForFullLines();

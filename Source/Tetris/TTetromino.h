@@ -63,6 +63,8 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	#endif // WITH_EDITOR
 
-	FIntVector2D GetGridPositionFromWorld(int32 Blockelement);
+	FIntVector2D GetBlockPositionFromWorld(int32 Blockelement);
 
+	bool IsOutOfBoundsVertical(int32 Columns);
+	bool IsBelowGround();
 };

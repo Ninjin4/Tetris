@@ -46,9 +46,34 @@ void ATTetromino::PostEditChangeProperty(FPropertyChangedEvent & PropertyChanged
 }
 #endif // WITH_EDITOR
 
-FIntVector2D ATTetromino::GetGridPositionFromWorld(int32 Blockelement)
+FIntVector2D ATTetromino::GetBlockPositionFromWorld(int32 Blockelement)
 {
 	FIntVector2D GridPosition = FIntVector2D(FMath::RoundToInt(Blocks[Blockelement]->GetComponentLocation().Z / 100.0f),
 		FMath::RoundToInt(Blocks[Blockelement]->GetComponentLocation().X / 100.0f));
 	return GridPosition;
+}
+
+bool ATTetromino::IsOutOfBoundsVertical(int32 Columns)
+{
+	for(UPaperSpriteComponent* Block : Blocks)
+	{
+		int32 Column = FMath::RoundToInt(Block->GetComponentLocation().X / 100.0f);
+		if(Column < 0 || Column >= Columns)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool ATTetromino::IsBelowGround()
+{
+	for(UPaperSpriteComponent* Block : Blocks)
+	{
+		if(FMath::RoundToInt(Block->GetComponentLocation().Z / 100.0f) < 0)
+		{
+			return true;
+		}
+	}
+	return false;
 }
