@@ -62,10 +62,12 @@ void ATGrid::MoveTetrominoDown(FVector Direction)
 
 		TetrominoCurrent->SetActorLocation(PreMoveLocation);
 		
+		// TetrominoCurrent is nullptr after this
 		AddToGrid();
 
 		CheckGridForFullLines();
 
+		// TetrominoCurrent will be possessed here again and is not nullptr anymore
 		SpawnNewTetromino();
 	}
 }
@@ -92,6 +94,7 @@ bool ATGrid::IsTetrominoBelowGround()
 
 bool ATGrid::AreTetrominoBlocksBlockedByBlocks()
 {
+	// TODO(Ninjin42): Think about a proper Tetromino public function
 	for(int32 i = 0; i < 4; i++)
 	{
 		if(Blocks[Index(TetrominoCurrent->GetBlockPositionFromWorld(i))] != nullptr)
@@ -104,18 +107,20 @@ bool ATGrid::AreTetrominoBlocksBlockedByBlocks()
 
 void ATGrid::AddToGrid()
 {
+	// TODO(Ninjin42): Think about a proper Tetromino public function
 	for(int32 i = 0; i < 4; i++)
 	{
 		Blocks[Index(TetrominoCurrent->GetBlockPositionFromWorld(i))] = TetrominoCurrent->Blocks[i];
 		TetrominoCurrent->Blocks[i]->Rename(nullptr, this);
 	}
 
-	// TODO(NINJIN42): TetrominoCurrent will point to nothing, probably change the whole code and always check TetrominoCurrent
+	// TODO(Ninjin42): TetrominoCurrent will point to nothing for a while, probably change the whole code and always check TetrominoCurrent
 	TetrominoCurrent->Destroy();
 }
 
 void ATGrid::CheckGridForFullLines()
 {
+	// TODO(Ninjin42): Only check the rows near the Tetromino position instead of the whole array
 	for(int32 RowCurrent = 0; RowCurrent < Rows; RowCurrent++)
 	{
 		bool bFullLine = true;
@@ -130,7 +135,6 @@ void ATGrid::CheckGridForFullLines()
 		if(bFullLine)
 		{
 			DeleteLine(RowCurrent);
-			// Hack for now, will check from bottom again, obviously can be made smarter but takes more time
 			RowCurrent--;
 		}
 	}
@@ -163,13 +167,13 @@ void ATGrid::SpawnNewTetromino()
 	int32 RandomTetromino = FMath::RandRange(0, TetrominoBPs.Num() - 1);
 	TetrominoCurrent = GetWorld()->SpawnActor<ATTetromino>(TetrominoBPs[RandomTetromino], SpawnLocation(), FRotator(0.0f));
 	
-	// Might want to use Deferred Spawning to wait for spawning until InitCustom is finished, not necessary when spawning BPs anyway
+	// Might want to use Deferred Spawning to wait for spawning until InitCustom is finished, but not necessary when spawning BPs
 
 	//FTransform SpawnTransform(Rotation, Origin);
 	//UGameplayStatics::BeginDeferredActorSpawnFromClass(this, TetrominoCurrent::StaticClass(), SpawnTransform));
 	//if(TetrominoCurrent != nullptr)
 	//{
-	//	MyDeferredActor->Init(ShootDir);
+	//	MyDeferredActor->Init();
 	//	UGameplayStatics::FinishSpawningActor(TetrominoCurrent, SpawnTransform);
 	//}
 }

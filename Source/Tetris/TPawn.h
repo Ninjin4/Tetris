@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Components/TimelineComponent.h"
 #include "TPawn.generated.h"
 
 class USpringArmComponent;
@@ -11,9 +12,7 @@ class UCameraComponent;
 class ATGrid;
 class UPaperSprite;
 
-// Handles all game logic, because it has easy access to input, controllers, is already part of gamemode
-// Could shift game logic to Gamemode, Gamestate, TLevelScriptActor or even Controller
-// Design Suggestion: Possess a single Tetromino and try to implement the game logic around the framework, but that needs more thoughts
+// TPawn contains mostly input logic and has access to the Grid to call the corresponding functions, it also triggers the automatic down movement with a timeline
 UCLASS()
 class TETRIS_API ATPawn : public APawn
 {
@@ -35,14 +34,31 @@ class TETRIS_API ATPawn : public APawn
 	void MoveRight();
 	void MoveLeft();
 	void RotateClockwise();
-	void MoveDown();
+	void MoveDownPressed();
+	void MoveDownReleased();
 
-	// Timer to drop Tetromino every X seconds
-	FTimerHandle DropTetrominoOneUnitHandle;
+	// Timeline to drop Tetromino every second
+	FTimeline TetrominoDropTimeline;
 
-	// The corresponding function that will be called
+	// The corresponding update function
 	UFUNCTION()
-	void OnDropTetrominoOneUnit();
+	void OnUpdateTetrominoDrop();
+
+	// The corresponding finish function
+	UFUNCTION()
+	void OnFinishTetrominoDrop();
+
+	// Timeline needs a dummy curve to read values on the update function
+	UPROPERTY(EditAnywhere, Category = "Assign")
+	UCurveFloat* TetrominoDropCurve;
+
+	// Normal Playrate
+	UPROPERTY(EditAnywhere, Category = "Assign")
+	float DropSpeed;
+
+	// Playrate when player presses down
+	UPROPERTY(EditAnywhere, Category = "Assign")
+	float DropSpeedFast;
 
 public:
 	// Sets default values for this pawn's properties
