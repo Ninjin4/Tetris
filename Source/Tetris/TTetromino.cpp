@@ -18,13 +18,13 @@ ATTetromino::ATTetromino()
 	Block0->bAbsoluteRotation = true;
 	Block1 = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("Block1"));
 	Block1->SetupAttachment(RootComponent);
-	Block0->bAbsoluteRotation = true;
+	Block1->bAbsoluteRotation = true;
 	Block2 = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("Block2"));
 	Block2->SetupAttachment(RootComponent);
-	Block0->bAbsoluteRotation = true;
+	Block2->bAbsoluteRotation = true;
 	Block3 = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("Block3"));
 	Block3->SetupAttachment(RootComponent);
-	Block0->bAbsoluteRotation = true;
+	Block3->bAbsoluteRotation = true;
 
 	int32 BlocksCount = 4;
 	Blocks.Reserve(BlocksCount);
