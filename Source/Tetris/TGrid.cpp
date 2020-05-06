@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "TGrid.h"
+#include "Tetris/TGrid.h"
 #include "Classes/PaperSpriteComponent.h"
 
 // Sets default values

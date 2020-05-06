@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "TTetromino.h"
-#include "Classes/PaperSpriteComponent.h"
+#include "Tetris/TTetromino.h"
 #include "Classes/PaperSprite.h"
+#include "Classes/PaperSpriteComponent.h"
 
 // Sets default values
 ATTetromino::ATTetromino()
@@ -15,16 +15,16 @@ ATTetromino::ATTetromino()
 
 	Block0 = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("Block0"));
 	Block0->SetupAttachment(RootComponent);
-	Block0->bAbsoluteRotation = true;
+	Block0->SetUsingAbsoluteRotation(true);
 	Block1 = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("Block1"));
 	Block1->SetupAttachment(RootComponent);
-	Block1->bAbsoluteRotation = true;
+	Block1->SetUsingAbsoluteRotation(true);
 	Block2 = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("Block2"));
 	Block2->SetupAttachment(RootComponent);
-	Block2->bAbsoluteRotation = true;
+	Block2->SetUsingAbsoluteRotation(true);
 	Block3 = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("Block3"));
 	Block3->SetupAttachment(RootComponent);
-	Block3->bAbsoluteRotation = true;
+	Block3->SetUsingAbsoluteRotation(true);
 
 	int32 BlocksCount = 4;
 	Blocks.Reserve(BlocksCount);

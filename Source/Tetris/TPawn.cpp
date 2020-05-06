@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "TPawn.h"
+#include "Tetris/TPawn.h"
 #include "Components/InputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "TGrid.h"
+#include "Tetris/TGrid.h"
 
 // Sets default values
 ATPawn::ATPawn()
