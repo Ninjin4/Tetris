@@ -13,17 +13,17 @@ struct FIntVector2D
     GENERATED_BODY()
 	
 public:
-	int32 Row;
-	int32 Column;
+	int32 X;
+	int32 Y;
 
 	FIntVector2D()
 	{
-		Row = 0;
-		Column = 0;
+		X = 0;
+		Y = 0;
 	}
 
-	FIntVector2D(int32 Row, int32 Column)
-		: Row(Row), Column(Column) {}
+	FIntVector2D(int32 X, int32 Y)
+		: X(X), Y(Y) {}
 };
 
 class ATTetromino;
@@ -40,12 +40,25 @@ class TETRIS_API ATGrid : public AActor
 {
 	GENERATED_BODY()
 
-	TArray<FTransform> Blocks;
+protected:
+	UPROPERTY(EditAnywhere, Category = "Assign")
+	int32 Rows;
+	UPROPERTY(EditAnywhere, Category = "Assign")
+	int32 Columns;
+	int32 CellCount;
+
+	// TODO: Delete when refactoring
+	UPROPERTY()
+	ATTetromino* TTetromino;
 
 	// The Grid, implemented as a 1D mesh array
-	UPROPERTY(VisibleDefaultsOnly)
-	UInstancedStaticMeshComponent* BlocksVisual;
+	TArray<FTransform> Blocks;
 
+	// Visual representation
+	UPROPERTY(VisibleAnywhere)
+	UInstancedStaticMeshComponent* BlocksVisuals;
+
+	UPROPERTY(VisibleAnywhere)
 	UInstancedStaticMeshComponent* OuterGridVisual;
 
 	// Might be useful if designer wants to change to Perspective Projection
@@ -56,39 +69,39 @@ class TETRIS_API ATGrid : public AActor
 	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* Camera; 
 
-	UPROPERTY(EditAnywhere, Category = "Assign")
-	int32 Rows;
-	UPROPERTY(EditAnywhere, Category = "Assign")
-	int32 Columns;
-
 	// Buffer area where Tetrominoes are spawned
 	int32 RowsWithBuffer;
 
-	// All possible Tetrominos are made in Blueprint
+	// TODO: Currently used to spawn new Tetros, move to Gamemode or something
 	UPROPERTY(EditAnywhere, Category = "Assign")
-	TArray<TSubclassOf<ATTetromino>> TetrominoBPs;
+	TSubclassOf<ATTetromino> TetrominoBP;
 
 	// Will spawn and possess a new Tetromino
+	void InitGrid();
 	void SpawnNewTetromino();
 
 	// Helper function to find the Grid centre
 	FVector SpawnLocation;
 
 	// Check functions when moving the Tetromino
-	bool IsTetrominoOutOfBoundsVertical(TArray<FTransform> BlocksTetromino) const;
-	bool IsTetrominoBelowGround(TArray<FTransform> BlocksTetromino) const;
-	bool IsTetrominoBlockedByGridBlocks(TArray<FTransform> BlocksTetromino) const;
+	bool IsBlockOutOfBoundsVertical(int32 TetrominoInstanceGridPositionX) const;
+	bool IsBlockBelowGround(int32 TetrominoInstanceGridPositionY) const;
+	bool IsBlockOnTopOfGridBlock(FIntVector2D TetrominoInstanceGridPosition) const;
 
 	void CheckGridForFullLines();
-	void DeleteLine(int32 Row);
+	void DeleteRow(int32 Y);
+	// TODO: Also used in Tetromino, make global, needs to be
+	UPROPERTY(EditAnywhere, Category = "Assign")
+	float BlockSize;
 
 	// Helper functions to convert Locations to GridPostions
 	// TODO: Check if turning these to FORCEINLINE performs faster
-	int32 Index(FIntVector2D GridPosition) const;
-	int32 ConvertBlockLocationToGridIndex(FTransform Block) const;
-	FIntVector2D GetBlockPositionFromWorld(int32 Blockelement) const;
+	int32 FindIndex(FIntVector2D GridPosition) const;
 	// An instance scale of 0 determines if the gridpostion is already filled with a block
 	bool IsGridBlockVisible(int32 Index) const;
+
+	// TODO: Refactor, same code can be found in TTetromino
+	void UpdateInstances();
 
 public:	
 	// Sets default values for this actor's properties
@@ -99,11 +112,12 @@ public:
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	#endif // WITH_EDITOR
 
-	// Interface for Pawn
-	bool CanTetrominoMoveHorizontal(TArray<FTransform> BlocksTetromino) const;
-	bool CanTetrominoMoveDown(TArray<FTransform> BlocksTetromino) const;
-	bool CanRotateTetromino(TArray<FTransform> BlocksTetromino) const;
-	void AddToGrid(TArray<FTransform> BlocksTetromino);
+	// Interface for Pawn, might turn into lambda and call it CollisionCheck
+	bool IsMoveHorizontalValid(const TArray<FTransform> TetrominoBlocks) const;
+	bool IsMoveDownValid(const TArray<FTransform> TetrominoBlocks) const;
+	bool IsRotationValid(const TArray<FTransform> TetrominoBlocks) const;
+	
+	void AddToGrid(const TArray<FTransform> TetrominoBlocks);
 
 protected:
 	// Called when the game starts or when spawned

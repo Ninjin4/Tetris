@@ -7,16 +7,6 @@
 #include "Engine/DataTable.h"
 #include "TTetromino.generated.h"
 
-UENUM()
-enum class EDirectionInput : uint8
-{
-	None,
-    Top,
-	Down,
-	Left,
-	Right
-};
-
 UENUM(BlueprintType)
 enum class ERotationRule : uint8
 {
@@ -31,7 +21,7 @@ struct FTetrominoData : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<bool> Shape;
+	TArray<bool> Blocks;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FLinearColor Color;
@@ -42,6 +32,7 @@ struct FTetrominoData : public FTableRowBase
 
 class UInstancedStaticMeshComponent;
 class ATGrid;
+class UDataTable;
 
 // "A tetromino is a geometric shape composed of four squares, connected orthogonally." - Google 
 // Includes the visual representation with meshes, and helper functions to check if they are in a valid position
@@ -51,38 +42,63 @@ class TETRIS_API ATTetromino : public APawn
 {
 	GENERATED_BODY()
 
+protected:
 	// Input names
 	static const FName MoveRightName;
 	static const FName MoveUpName;
+	static const FString ContextString;
 
 	UPROPERTY(EditAnywhere, Category = "Assign")
-	class UDataTable* TetrominoDataTable;
+	UDataTable* TetrominoDataTable;
 
-	// Used internally to update Transforms, it's also faster than GetTransformInstance
-	// Easier to deal with in Niagara
-	TArray<FTransform> Blocks;
-
-	// Visual representation of the Tetrominos, can be any type of mesh
-	UPROPERTY(VisibleDefaultsOnly)
-	UInstancedStaticMeshComponent* BlocksVisual;
-
+	// TODO: Turn into FIntVector2D where ColumnCount and RowCount can be different
+	int32 BlocksDimension;
+	FVector ScaleFromColor;
+	ERotationRule RotationRule;
 	UPROPERTY(EditAnywhere, Category = "Assign")
 	float BlockSize;
 
+	// All transforms are in world space
+	TArray<FTransform> Blocks;
+	FVector PivotLocationWorld;
+
+	// Visual representation of the Tetrominos, can be any type of mesh
+	// Will manually updated in world space
+	UPROPERTY(VisibleDefaultsOnly)
+	UInstancedStaticMeshComponent* BlocksVisuals;
+
 	// Player Input Functions
-	void MoveRight(float Strength);
-	void MoveUp(float Strength);
-	void UpdateInput();
-	void UpdateDirectionInput(float DeltaTime);
-	FVector2D InputMoveRaw;
-	FVector2D InputMoveRemap;
-	EDirectionInput DirectionInputCurrent;
-	UPROPERTY(EditAnywhere, Category = "Assign")
-	float DeadZoneCentre;
-	float DeadZoneCentreSquared;
+	void DropPressed();
+	void MoveRightPressed();
+	void MoveRightReleased();
+	void MoveLeftPressed();
+	void MoveLefttReleased();
+	void MoveDownPressed();
+	void MoveDownReleased();
+	void RotateClockwisePressed();
+	void RotateClockwiseReleased();
+	void RotateCounterClockwisePressed();
+	void RotateCounterClockwiseReleased();
+
+	uint8 MoveRight : 1;
+	uint8 MoveLeft : 1;
+	uint8 RotateClockwise : 1;
+	uint8 RotateCounterClockwise : 1;
+	uint8 MoveDown : 1;
+
+	void UpdateInputTimers(float DeltaTime);
 
 	float HorizontalInputTime;
+	float RotationInputTime;
 	float DropInputTime;
+
+	// TODO: Think about changing function args to a bool called Positive
+	// TODO: Refactor since they share quite a few lines
+	void CheckAndMoveHorizontal(float Direction);
+	void CheckAndRotate(float Direction);
+	void CheckAndMoveDown();
+
+	void UpdateInstances();
 
 	// Speed with no input
 	UPROPERTY(EditAnywhere, Category = "Assign")
@@ -90,7 +106,11 @@ class TETRIS_API ATTetromino : public APawn
 
 	// Speed (dropping and horizontal movement) when holding
 	UPROPERTY(EditAnywhere, Category = "Assign")
-	float MoveSpeedHolding;
+	float MoveSpeed;
+
+	// Speed (dropping and horizontal movement) when holding
+	UPROPERTY(EditAnywhere, Category = "Assign")
+	float RotationSpeed;
 
 	// Instead of using Unreals global collision checks, check valid moves inside Grid gamestate class
 	UPROPERTY()
@@ -99,9 +119,11 @@ class TETRIS_API ATTetromino : public APawn
 public:
 	// Sets default values for this actor's properties
 	ATTetromino();
+
+	// TODO: I don't really like where this is going :/
+	void SpawnTetromino(int32 GridColumns, ATGrid* GridNew);
 	
 #if WITH_EDITOR
-	// Update DeadZoneCentreSquared
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif // WITH_EDITOR
 
