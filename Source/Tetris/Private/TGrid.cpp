@@ -50,6 +50,7 @@ void ATGrid::BeginPlay()
 	Super::BeginPlay();
 
 	InitGrid();
+	InitGridOuter();
 	SpawnNewTetromino();
 
 	GetWorld()->GetFirstPlayerController()->SetViewTarget(this);
@@ -72,6 +73,38 @@ void ATGrid::InitGrid()
 
 			BlocksVisuals->AddInstanceWorldSpace(Blocks.Last());
 		}
+	}
+}
+
+void ATGrid::InitGridOuter()
+{
+	Blocks.Reserve(2 * Rows + Columns);
+
+	for (int32 Y = 0; Y < Rows; Y++)
+	{
+		FVector Location = FVector(-BlockSize, BlockSize * Y, 0.0f);
+		FTransform Transform = FTransform(FQuat::Identity, Location, FVector(1.001f));
+		Blocks.Emplace(Transform);
+
+		BlocksVisuals->AddInstanceWorldSpace(Blocks.Last());
+	}
+
+	for (int32 Y = 0; Y < Rows; Y++)
+	{
+		FVector Location = FVector(((float)Columns) * BlockSize, BlockSize * Y,  0.0f);
+		FTransform Transform = FTransform(FQuat::Identity, Location, FVector(1.001f));
+		Blocks.Emplace(Transform);
+
+		BlocksVisuals->AddInstanceWorldSpace(Blocks.Last());
+	}
+
+	for (int32 X = -1; X < Columns+1; X++)
+	{
+		FVector Location = FVector(BlockSize * X, ((float)Rows) * BlockSize, 0.0f);
+		FTransform Transform = FTransform(FQuat::Identity, Location, FVector(1.001f));
+		Blocks.Emplace(Transform);
+
+		BlocksVisuals->AddInstanceWorldSpace(Blocks.Last());
 	}
 }
 
@@ -232,7 +265,7 @@ void ATGrid::CheckGridForFullLines()
 			DeleteRow(Y);
 		}
 	}
-	UpdateInstances();
+	UpdateInstances(Blocks);
 }
 
 void ATGrid::DeleteRow(int32 Y)
@@ -259,12 +292,12 @@ int32 ATGrid::FindIndex(FIntVector2D GridPosition) const
 	return GridPosition.Y * Columns + GridPosition.X;
 }
 
-void ATGrid::UpdateInstances()
+void ATGrid::UpdateInstances(TArray<FTransform> BlocksCur)
 {
-	int32 BlocksCount = Blocks.Num();
+	int32 BlocksCount = BlocksCur.Num();
 	for (int32 BlockIndex = 0; BlockIndex < BlocksCount; BlockIndex++)
 	{
-		BlocksVisuals->UpdateInstanceTransform(BlockIndex, Blocks[BlockIndex], true);
+		BlocksVisuals->UpdateInstanceTransform(BlockIndex, BlocksCur[BlockIndex], true);
 	}
-	BlocksVisuals->UpdateInstanceTransform(0, Blocks[0], true, true);
+	BlocksVisuals->UpdateInstanceTransform(0, BlocksCur[0], true, true);
 }

@@ -53,6 +53,7 @@ protected:
 
 	// The Grid, implemented as a 1D mesh array
 	TArray<FTransform> Blocks;
+	TArray<FTransform> BlocksOuter;
 
 	// Visual representation
 	UPROPERTY(VisibleAnywhere)
@@ -78,6 +79,7 @@ protected:
 
 	// Will spawn and possess a new Tetromino
 	void InitGrid();
+	void InitGridOuter();
 	void SpawnNewTetromino();
 
 	// Helper function to find the Grid centre
@@ -101,7 +103,7 @@ protected:
 	bool IsGridBlockVisible(int32 Index) const;
 
 	// TODO: Refactor, same code can be found in TTetromino
-	void UpdateInstances();
+	void UpdateInstances(TArray<FTransform> Blocks);
 
 public:	
 	// Sets default values for this actor's properties
