@@ -116,6 +116,8 @@ protected:
 	UPROPERTY()
 	ATGrid* Grid;
 
+	FRandomStream SpawnStream;
+
 public:
 	// Sets default values for this actor's properties
 	ATTetromino();

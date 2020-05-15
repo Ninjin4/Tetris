@@ -117,6 +117,8 @@ void ATTetromino::RotateCounterClockwiseReleased()
 void ATTetromino::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SpawnStream = FRandomStream(FMath::Rand());
 }
 
 void ATTetromino::SpawnTetromino(int32 GridColumns, ATGrid* GridNew)
@@ -124,7 +126,7 @@ void ATTetromino::SpawnTetromino(int32 GridColumns, ATGrid* GridNew)
 	TArray<FName> RowNames = TetrominoDataTable->GetRowNames();
 	int32 RowCount = RowNames.Num();
 
-	int32 TetrominoRandomFromDataTable = UKismetMathLibrary::RandomInteger(RowCount);
+	int32 TetrominoRandomFromDataTable = SpawnStream.RandRange(0, RowCount-1);
 	// TODO: Check if struct pointer is not handled by garbage collection
 	FTetrominoData* TetrominoData = TetrominoDataTable->FindRow<FTetrominoData>(RowNames[TetrominoRandomFromDataTable], ContextString, true);
 
