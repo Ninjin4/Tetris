@@ -6,26 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "TGrid.generated.h"
 
-// Helper struct to hold the world position of the Tetrominos in a 2D array format
-USTRUCT(BlueprintType)
-struct FIntVector2D
-{
-    GENERATED_BODY()
-	
-public:
-	int32 X;
-	int32 Y;
-
-	FIntVector2D()
-	{
-		X = 0;
-		Y = 0;
-	}
-
-	FIntVector2D(int32 X, int32 Y)
-		: X(X), Y(Y) {}
-};
-
 class ATTetromino;
 class UInstancedStaticMeshComponent;
 class USpringArmComponent;
@@ -88,7 +68,7 @@ protected:
 	// Check functions when moving the Tetromino
 	bool IsBlockOutOfBoundsVertical(int32 TetrominoInstanceGridPositionX) const;
 	bool IsBlockBelowGround(int32 TetrominoInstanceGridPositionY) const;
-	bool IsBlockOnTopOfGridBlock(FIntVector2D TetrominoInstanceGridPosition) const;
+	bool IsBlockOnTopOfGridBlock(FIntPoint TetrominoInstanceGridPosition) const;
 
 	void CheckGridForFullLines();
 	void DeleteRow(int32 Y);
@@ -98,7 +78,7 @@ protected:
 
 	// Helper functions to convert Locations to GridPostions
 	// TODO: Check if turning these to FORCEINLINE performs faster
-	int32 FindIndex(FIntVector2D GridPosition) const;
+	int32 FindIndex(FIntPoint GridPosition) const;
 	// An instance scale of 0 determines if the gridpostion is already filled with a block
 	bool IsGridBlockVisible(int32 Index) const;
 

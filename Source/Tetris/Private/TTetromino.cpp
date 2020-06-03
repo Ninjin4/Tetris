@@ -19,9 +19,6 @@ ATTetromino::ATTetromino()
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
-	// Whenever a tetromino is spawned, instantly give the player control over it
-	AutoPossessPlayer = EAutoReceiveInput::Player0;
-
 	BlocksVisuals = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("BlocksVisual"));
 	SetRootComponent(BlocksVisuals);
 	BlocksVisuals->SetUsingAbsoluteRotation(true);
@@ -31,6 +28,8 @@ ATTetromino::ATTetromino()
 	MoveSpeed = 9.0f;
 	RotationSpeed = 3.0f;
 
+	// Whenever a tetromino is spawned, instantly give the player control over it
+	AutoPossessPlayer = EAutoReceiveInput::Player0;
 	AutoReceiveInput = EAutoReceiveInput::Player0;
 }
 

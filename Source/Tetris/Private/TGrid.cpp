@@ -138,7 +138,7 @@ bool ATGrid::IsMoveHorizontalValid(const TArray<FTransform> TetrominoBlocks) con
 {
 	for(const FTransform& TetrominoBlock : TetrominoBlocks)
 	{
-		FIntVector2D TetrominoInstanceGridPosition = FIntVector2D(
+		FIntPoint TetrominoInstanceGridPosition = FIntPoint(
 			FMath::RoundToInt(TetrominoBlock.GetLocation().X / BlockSize),
 			FMath::RoundToInt(TetrominoBlock.GetLocation().Y / BlockSize));
 		
@@ -160,7 +160,7 @@ bool ATGrid::IsMoveDownValid(const TArray<FTransform> TetrominoBlocks) const
 {
 	for(const FTransform& TetrominoBlock : TetrominoBlocks)
 	{
-		FIntVector2D TetrominoInstanceGridPosition = FIntVector2D(
+		FIntPoint TetrominoInstanceGridPosition = FIntPoint(
 			FMath::RoundToInt(TetrominoBlock.GetLocation().X / BlockSize),
 			FMath::RoundToInt(TetrominoBlock.GetLocation().Y / BlockSize));
 		
@@ -182,7 +182,7 @@ bool ATGrid::IsRotationValid(const TArray<FTransform> TetrominoBlocks) const
 {
 	for(const FTransform& TetrominoBlock : TetrominoBlocks)
 	{
-		FIntVector2D TetrominoInstanceGridPosition = FIntVector2D(
+		FIntPoint TetrominoInstanceGridPosition = FIntPoint(
 			FMath::RoundToInt(TetrominoBlock.GetLocation().X / BlockSize),
 			FMath::RoundToInt(TetrominoBlock.GetLocation().Y / BlockSize));
 		
@@ -215,7 +215,7 @@ bool ATGrid::IsBlockBelowGround(int32 TetrominoInstanceGridPositionY) const
 	return (TetrominoInstanceGridPositionY > Rows-1);
 }
 
-bool ATGrid::IsBlockOnTopOfGridBlock(FIntVector2D TetrominoInstanceGridPosition) const
+bool ATGrid::IsBlockOnTopOfGridBlock(FIntPoint TetrominoInstanceGridPosition) const
 {
 	int32 GridIndex = FindIndex(TetrominoInstanceGridPosition);
 
@@ -232,7 +232,7 @@ void ATGrid::AddToGrid(const TArray<FTransform> TetrominoBlocks)
 {
 	for(const FTransform& TetrominoBlock : TetrominoBlocks)
 	{
-		FIntVector2D TetrominoInstanceGridPosition = FIntVector2D(
+		FIntPoint TetrominoInstanceGridPosition = FIntPoint(
 			FMath::RoundToInt(TetrominoBlock.GetLocation().X / BlockSize),
 			FMath::RoundToInt(TetrominoBlock.GetLocation().Y / BlockSize));
 		
@@ -253,7 +253,7 @@ void ATGrid::CheckGridForFullLines()
 		int32 X = 0;
 		for(X; X < Columns; X++)
 		{
-			if(!(IsGridBlockVisible(FindIndex(FIntVector2D(X, Y)))))
+			if(!(IsGridBlockVisible(FindIndex(FIntPoint(X, Y)))))
 			{
 				bFullLine = false;
 				break;
@@ -270,7 +270,7 @@ void ATGrid::CheckGridForFullLines()
 
 void ATGrid::DeleteRow(int32 Y)
 {
-	int32 IndexStart = FindIndex(FIntVector2D(0, Y));
+	int32 IndexStart = FindIndex(FIntPoint(0, Y));
 	Blocks.RemoveAt(IndexStart, Columns, true);
 
 	for(int32 Index = IndexStart-1; Index > -1; Index--)
@@ -287,7 +287,7 @@ void ATGrid::DeleteRow(int32 Y)
 
 }
 
-int32 ATGrid::FindIndex(FIntVector2D GridPosition) const
+int32 ATGrid::FindIndex(FIntPoint GridPosition) const
 {
 	return GridPosition.Y * Columns + GridPosition.X;
 }
