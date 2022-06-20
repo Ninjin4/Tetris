@@ -3,9 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "TTetrominoRotationRule.h"
 #include "GameFramework/Pawn.h"
-#include "Engine/DataTable.h"
+#include "TTetrominoRotationRule.h"
 #include "TTetromino.generated.h"
 
 class UInstancedStaticMeshComponent;
@@ -20,29 +19,21 @@ class TETRIS_API ATTetromino : public APawn
 {
 	GENERATED_BODY()
 
-protected:
 	static const FName MoveRightName;
 	static const FName MoveUpName;
 	static const FString ContextString;
 
-	UPROPERTY(EditAnywhere, Category = "Assign")
-	UDataTable* TetrominoDataTable;
+public:
+	ATTetromino();
 
-	// TODO: Turn into FIntPoint where ColumnCount and RowCount can be different
-	int32 BlocksDimension;
-	FVector ScaleFromColor;
-	ERotationRule RotationRule;
-	UPROPERTY(EditAnywhere, Category = "Assign")
-	float BlockSize = 100.f;
+	virtual void Tick(float DeltaTime) override;
 
-	// All transforms are in world space
-	TArray<FTransform> Blocks;
-	FVector PivotLocationWorld;
+	void GenerateTetromino(const int32 gridColumns, ATGrid* gridNew);
 
-	// Visual representation of the Tetrominos, can be any type of mesh
-	// Will manually updated in world space
-	UPROPERTY(VisibleDefaultsOnly)
-	UInstancedStaticMeshComponent* BlocksVisuals;
+protected:
+
+	virtual void BeginPlay() override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 	// Player Input Functions
 	void DropPressed();
@@ -57,23 +48,24 @@ protected:
 	void RotateCounterClockwisePressed();
 	void RotateCounterClockwiseReleased();
 
-	uint8 MoveRight : 1;
-	uint8 MoveLeft : 1;
-	uint8 RotateClockwise : 1;
-	uint8 RotateCounterClockwise : 1;
-	uint8 MoveDown : 1;
-
 	void UpdateInputTimers(float deltaTime);
-
-	float HorizontalInputTime;
-	float RotationInputTime;
-	float DropInputTime;
 
 	// TODO: Think about changing function args to a bool called Positive
 	// TODO: Refactor since they share quite a few lines
 	void CheckAndMoveHorizontal(float direction);
 	void CheckAndRotate(float direction);
 	void CheckAndMoveDown();
+
+	UPROPERTY(EditAnywhere, Category = "Assign")
+	UDataTable* TetrominoDataTable;
+
+	// Visual representation of the Tetrominos, can be any type of mesh
+	// Will manually updated in world space
+	UPROPERTY(VisibleDefaultsOnly)
+	UInstancedStaticMeshComponent* BlocksVisuals;
+
+	UPROPERTY(EditAnywhere, Category = "Assign")
+	float BlockSize = 100.f;
 
 	// Speed with no input
 	UPROPERTY(EditAnywhere, Category = "Assign")
@@ -87,25 +79,28 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Assign")
 	float RotationSpeed = 3.f;
 
+	// TODO Turn into smart pointer
 	// Instead of using Unreals global collision checks, check valid moves inside Grid gamestate class
 	UPROPERTY()
 	ATGrid* Grid;
 
+	// TODO: Turn into FIntPoint where ColumnCount and RowCount can be different
+	int32 BlocksDimensionCur;
+	FVector ScaleFromColorCur;
+	ERotationRule RotationRuleCur;
+
+	TArray<FTransform> BlocksTransformsWorld;
+	FVector PivotLocationWorld;
+
+	float HorizontalInputTime;
+	float RotationInputTime;
+	float DropInputTime;
+
+	uint8 MoveRight : 1;
+	uint8 MoveLeft : 1;
+	uint8 RotateClockwise : 1;
+	uint8 RotateCounterClockwise : 1;
+	uint8 MoveDown : 1;
+
 	FRandomStream SpawnStream;
-
-public:
-	// Sets default values for this actor's properties
-	ATTetromino();
-
-	// TODO: I don't really like where this is going :/
-	void SpawnTetromino(const int32 gridColumns, ATGrid* gridNew);
-
-protected:
-	virtual void BeginPlay() override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
-
-public:
-	virtual void Tick(float DeltaTime) override;
 };

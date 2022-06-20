@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Tetris/Public/TTetromino.h"
-
+#include "Tetris/Public/TGrid.h"
 #include "TTetrominoData.h"
+
 #include "Components/InputComponent.h"
 #include "Classes/Components/InstancedStaticMeshComponent.h"
-#include "Tetris/Public/TGrid.h"
 
 const FName ATTetromino::MoveRightName = FName(TEXT("MoveRight"));
 const FName ATTetromino::MoveUpName = FName(TEXT("MoveUp"));
@@ -104,7 +104,7 @@ void ATTetromino::BeginPlay()
 	SpawnStream = FRandomStream(FMath::Rand());
 }
 
-void ATTetromino::SpawnTetromino(const int32 gridColumns, ATGrid* gridNew)
+void ATTetromino::GenerateTetromino(const int32 gridColumns, ATGrid* gridNew)
 {
 	TArray<FName> RowNames = TetrominoDataTable->GetRowNames();
 	const int32 rowCount = RowNames.Num();
@@ -113,13 +113,13 @@ void ATTetromino::SpawnTetromino(const int32 gridColumns, ATGrid* gridNew)
 	// TODO: Check if struct pointer is not handled by garbage collection
 	const FTetrominoData* const tetrominoData = TetrominoDataTable->FindRow<FTetrominoData>(RowNames[tetrominoRandomFromDataTable], ContextString, true);
 
-	ScaleFromColor = FVector::OneVector + (FVector(tetrominoData->Color) / 1000.f);
-	RotationRule = tetrominoData->RotationRule;
+	ScaleFromColorCur = FVector::OneVector + (FVector(tetrominoData->Color) / 1000.f);
+	RotationRuleCur = tetrominoData->RotationRule;
 
 	// TODO: Might as well ask the designer to input rows/columns directly
-	BlocksDimension = FMath::RoundToInt(FMath::Sqrt(static_cast<float>(tetrominoData->Blocks.Num())));
+	BlocksDimensionCur = FMath::RoundToInt(FMath::Sqrt(static_cast<float>(tetrominoData->Blocks.Num())));
 
-	if (!ensureMsgf(tetrominoData->Blocks.Num() % BlocksDimension == 0, TEXT("Make sure every TetrominoShape has n*n cells!")))
+	if (!ensureMsgf(tetrominoData->Blocks.Num() % BlocksDimensionCur == 0, TEXT("Make sure every TetrominoShape has n*n cells!")))
 	{
 		return;
 	}
@@ -127,38 +127,38 @@ void ATTetromino::SpawnTetromino(const int32 gridColumns, ATGrid* gridNew)
 	// If column half is x.5, floor to prefer left side spawn
 	const float spawnLocationX =
 		FMath::FloorToFloat(static_cast<float>(gridColumns-1) / 2.f) -
-		FMath::FloorToFloat(static_cast<float>(BlocksDimension) / 2.f);
+		FMath::FloorToFloat(static_cast<float>(BlocksDimensionCur) / 2.f);
 
 	const FVector SpawnLocation = FVector(spawnLocationX, 0.f, 0.f);
 
 	const float pivotLocationWorldX =
 		FMath::FloorToFloat(static_cast<float>(gridColumns-1) / 2.f) -
-		(BlocksDimension % 2 == 1 ? 0.f : 0.5f);
+		(BlocksDimensionCur % 2 == 1 ? 0.f : 0.5f);
 
-	const float pivotLocationWorldY = static_cast<float>(BlocksDimension-1) / 2.f;
+	const float pivotLocationWorldY = static_cast<float>(BlocksDimensionCur-1) / 2.f;
 
 	PivotLocationWorld = FVector(pivotLocationWorldX, pivotLocationWorldY, 0.f) * BlockSize;
 
-	Blocks.Empty();
-	Blocks.Reserve(FMath::Square(BlocksDimension));
-	for (int32 y = 0; y < BlocksDimension; y++)
+	BlocksTransformsWorld.Empty();
+	BlocksTransformsWorld.Reserve(FMath::Square(BlocksDimensionCur));
+	for (int32 y = 0; y < BlocksDimensionCur; y++)
 	{
-		for (int32 x = 0; x < BlocksDimension; x++)
+		for (int32 x = 0; x < BlocksDimensionCur; x++)
 		{
-			if (tetrominoData->Blocks[y * BlocksDimension + x] == true)
+			if (tetrominoData->Blocks[y * BlocksDimensionCur + x] == true)
 			{
 				const FVector locationTetroGrid = FVector(static_cast<float>(x), static_cast<float>(y), 0.f);
 				const FVector locationWorld = (locationTetroGrid + SpawnLocation) * BlockSize;
-				Blocks.Emplace(FTransform(FQuat::Identity, locationWorld, ScaleFromColor));
+				BlocksTransformsWorld.Emplace(FTransform(FQuat::Identity, locationWorld, ScaleFromColorCur));
 			}
 		}
 	}
 
 	BlocksVisuals->ClearInstances();
-	BlocksVisuals->AddInstances(Blocks, false, true);
+	BlocksVisuals->AddInstances(BlocksTransformsWorld, false, true);
 
 	Grid = gridNew;
-	const bool bGameOver = !Grid->IsMoveDownValid(Blocks);
+	const bool bGameOver = !Grid->IsMoveDownValid(BlocksTransformsWorld);
 	if (bGameOver)
 	{
 		SetActorTickEnabled(false);
@@ -244,20 +244,20 @@ void ATTetromino::UpdateInputTimers(float deltaTime)
 void ATTetromino::CheckAndMoveHorizontal(float direction)
 {
 	const FVector moveDirection = FVector(BlockSize * direction, 0.f, 0.f);
-	for (FTransform& block : Blocks)
+	for (FTransform& block : BlocksTransformsWorld)
 	{
 		block.SetLocation(block.GetLocation() + moveDirection);
 	}
 
-	const bool bAllowMove = Grid->IsMoveHorizontalValid(Blocks);
+	const bool bAllowMove = Grid->IsMoveHorizontalValid(BlocksTransformsWorld);
 	if (bAllowMove)
 	{
 		PivotLocationWorld += moveDirection;
-		BlocksVisuals->BatchUpdateInstancesTransforms(0, Blocks, true, true, true);
+		BlocksVisuals->BatchUpdateInstancesTransforms(0, BlocksTransformsWorld, true, true, true);
 	}
 	else
 	{
-		for (FTransform& block : Blocks)
+		for (FTransform& block : BlocksTransformsWorld)
 		{
 			block.SetLocation(block.GetLocation() - moveDirection);
 		}
@@ -266,7 +266,7 @@ void ATTetromino::CheckAndMoveHorizontal(float direction)
 
 void ATTetromino::CheckAndRotate(float direction)
 {
-	for (FTransform& block : Blocks)
+	for (FTransform& block : BlocksTransformsWorld)
 	{
 		const FVector rotationPivot = block.GetLocation() - PivotLocationWorld;
 		const FQuat rotation = FQuat::MakeFromEuler(FVector(0.f, 0.f, direction * 90.f));
@@ -276,14 +276,14 @@ void ATTetromino::CheckAndRotate(float direction)
 		block.SetLocation(newVector);
 	}
 
-	const bool bAllowMove = Grid->IsRotationValid(Blocks);
+	const bool bAllowMove = Grid->IsRotationValid(BlocksTransformsWorld);
 	if (bAllowMove)
 	{
-		BlocksVisuals->BatchUpdateInstancesTransforms(0, Blocks, true, true, true);
+		BlocksVisuals->BatchUpdateInstancesTransforms(0, BlocksTransformsWorld, true, true, true);
 	}
 	else
 	{
-		for (FTransform& block : Blocks)
+		for (FTransform& block : BlocksTransformsWorld)
 		{
 			const FVector rotationPivot = block.GetLocation() - PivotLocationWorld;
 			const FQuat rotation = FQuat::MakeFromEuler(FVector(0.f, 0.f, -direction * 90.f));
@@ -298,23 +298,23 @@ void ATTetromino::CheckAndRotate(float direction)
 void ATTetromino::CheckAndMoveDown()
 {
 	const FVector moveDirection = FVector(0.f, BlockSize, 0.f);
-	for (FTransform& block : Blocks)
+	for (FTransform& block : BlocksTransformsWorld)
 	{
 		block.SetLocation(block.GetLocation() + moveDirection);
 	}
 
-	const bool allowMove = Grid->IsMoveDownValid(Blocks);
+	const bool allowMove = Grid->IsMoveDownValid(BlocksTransformsWorld);
 	if (allowMove)
 	{
 		PivotLocationWorld += moveDirection;
-		BlocksVisuals->BatchUpdateInstancesTransforms(0, Blocks, true, true, true);
+		BlocksVisuals->BatchUpdateInstancesTransforms(0, BlocksTransformsWorld, true, true, true);
 	}
 	else
 	{
-		for (FTransform& block : Blocks)
+		for (FTransform& block : BlocksTransformsWorld)
 		{
 			block.SetLocation(block.GetLocation() - moveDirection);
 		}
-		Grid->AddToGrid(Blocks);
+		Grid->AddToGrid(BlocksTransformsWorld);
 	}
 }

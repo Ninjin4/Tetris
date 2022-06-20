@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Tetris/Public/TGrid.h"
-#include "Classes/Components/InstancedStaticMeshComponent.h"
 #include "Tetris/Public/TTetromino.h"
 
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "Classes/Components/InstancedStaticMeshComponent.h"
 
 ATGrid::ATGrid()
 {
@@ -119,7 +119,7 @@ void ATGrid::SpawnNewTetromino()
 	TTetromino = Cast<ATTetromino>(GetWorld()->GetFirstPlayerController()->GetPawn());
 	ensure(IsValid(TTetromino));
 
-	TTetromino->SpawnTetromino(Columns, this);
+	TTetromino->GenerateTetromino(Columns, this);
 
 	// Might want to use Deferred Spawning to wait for spawning until InitCustom is finished, but not necessary when spawning BPs
 
@@ -239,7 +239,7 @@ void ATGrid::AddToGrid(const TArray<FTransform> tetrominoBlocks)
 	}
 
 	CheckGridForFullLines();
-	TTetromino->SpawnTetromino(Columns, this);
+	TTetromino->GenerateTetromino(Columns, this);
 }
 
 void ATGrid::CheckGridForFullLines()
@@ -262,7 +262,8 @@ void ATGrid::CheckGridForFullLines()
 			DeleteRow(y);
 		}
 	}
-	UpdateInstances(Blocks);
+	BlocksVisuals->BatchUpdateInstancesTransforms(0, Blocks, true, true, true);
+
 }
 
 void ATGrid::DeleteRow(const int32 y)
@@ -287,14 +288,4 @@ void ATGrid::DeleteRow(const int32 y)
 int32 ATGrid::FindIndex(const FIntPoint& gridPosition) const
 {
 	return gridPosition.Y * Columns + gridPosition.X;
-}
-
-void ATGrid::UpdateInstances(TArray<FTransform> BlocksCur)
-{
-	const int32 blocksCount = BlocksCur.Num();
-	for (int32 blockIndex = 0; blockIndex < blocksCount; blockIndex++)
-	{
-		BlocksVisuals->UpdateInstanceTransform(blockIndex, BlocksCur[blockIndex], true);
-	}
-	BlocksVisuals->UpdateInstanceTransform(0, BlocksCur[0], true, true);
 }
