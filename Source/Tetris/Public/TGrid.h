@@ -10,8 +10,6 @@ class ATTetromino;
 class UInstancedStaticMeshComponent;
 class USpringArmComponent;
 class UCameraComponent;
-// TODO: Grid needs to know ERotationRule, but now Grid and Tetromino need to know each other
-class ATTetromino;
 
 // The Grid is implemented in a 1D array, but functions operate on 2D logic for easier understanding
 // Handles validation of the movement received from the Pawn (basically replaces Unreals collision sweep)
@@ -22,10 +20,13 @@ class TETRIS_API ATGrid : public AActor
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Assign")
-	int32 Rows;
+	int32 Rows = 20;
 	UPROPERTY(EditAnywhere, Category = "Assign")
-	int32 Columns;
-	int32 CellCount;
+	int32 Columns = 20;
+	int32 CellCount = 0;
+
+	// Buffer area above the grid where Tetrominoes are spawned
+	int32 RowsWithBuffer = Rows + 4;
 
 	// TODO: Delete when refactoring
 	UPROPERTY()
@@ -48,10 +49,7 @@ protected:
 
 	// Set to Orthographic by default
 	UPROPERTY(VisibleAnywhere)
-	UCameraComponent* Camera; 
-
-	// Buffer area where Tetrominoes are spawned
-	int32 RowsWithBuffer;
+	UCameraComponent* Camera;
 
 	// TODO: Currently used to spawn new Tetros, move to Gamemode or something
 	UPROPERTY(EditAnywhere, Category = "Assign")
@@ -66,42 +64,43 @@ protected:
 	FVector SpawnLocation;
 
 	// Check functions when moving the Tetromino
-	bool IsBlockOutOfBoundsVertical(int32 TetrominoInstanceGridPositionX) const;
-	bool IsBlockBelowGround(int32 TetrominoInstanceGridPositionY) const;
-	bool IsBlockOnTopOfGridBlock(FIntPoint TetrominoInstanceGridPosition) const;
+	bool IsBlockOutOfBoundsVertical(const int32 tetrominoInstanceGridPositionX) const;
+	bool IsBlockBelowGround(const int32 tetrominoInstanceGridPositionY) const;
+	bool IsBlockOnTopOfGridBlock(const FIntPoint& tetrominoInstanceGridPosition) const;
 
 	void CheckGridForFullLines();
-	void DeleteRow(int32 Y);
+	void DeleteRow(const int32 y);
 	// TODO: Also used in Tetromino, make global, needs to be
 	UPROPERTY(EditAnywhere, Category = "Assign")
-	float BlockSize;
+	float BlockSize = 100.0f;
 
 	// Helper functions to convert Locations to GridPostions
 	// TODO: Check if turning these to FORCEINLINE performs faster
-	int32 FindIndex(FIntPoint GridPosition) const;
+	int32 FindIndex(const FIntPoint& gridPosition) const;
 	// An instance scale of 0 determines if the gridpostion is already filled with a block
-	bool IsGridBlockVisible(int32 Index) const;
+	bool IsGridBlockVisible(const int32 index) const;
 
 	// TODO: Refactor, same code can be found in TTetromino
-	void UpdateInstances(TArray<FTransform> Blocks);
+	void UpdateInstances(TArray<FTransform> blocks);
 
-public:	
-	// Sets default values for this actor's properties
+public:
 	ATGrid();
 
 	// Only here if Outer Grid will be replaced by other visual blocks and if it should be made procedural
 	#if WITH_EDITOR
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-	#endif // WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& propertyChangedEvent) override;
+
+	void CentreSpringArm();
+
+#endif
 
 	// Interface for Pawn, might turn into lambda and call it CollisionCheck
-	bool IsMoveHorizontalValid(const TArray<FTransform> TetrominoBlocks) const;
-	bool IsMoveDownValid(const TArray<FTransform> TetrominoBlocks) const;
-	bool IsRotationValid(const TArray<FTransform> TetrominoBlocks) const;
-	
-	void AddToGrid(const TArray<FTransform> TetrominoBlocks);
+	bool IsMoveHorizontalValid(const TArray<FTransform> tetrominoBlocks) const;
+	bool IsMoveDownValid(const TArray<FTransform> tetrominoBlocks) const;
+	bool IsRotationValid(const TArray<FTransform> tetrominoBlocks) const;
+
+	void AddToGrid(const TArray<FTransform> tetrominoBlocks);
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 };

@@ -8,10 +8,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PlayerController.h"
 
-// Sets default values
 ATGrid::ATGrid()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	BlocksVisuals = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("BlocksVisuals"));
@@ -24,27 +22,32 @@ ATGrid::ATGrid()
 	SpringArm->SetupAttachment(BlocksVisuals);
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->SetProjectionMode(ECameraProjectionMode::Orthographic);
-	Camera->SetOrthoWidth(2048.0f);
-
-	Rows = 20;
-	Columns = 20;
-	RowsWithBuffer = Rows + 4;
-
-	BlockSize = 100.0f;
+	Camera->SetOrthoWidth(2048.f);
 }
 
 #if WITH_EDITOR
-void ATGrid::PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)
+void ATGrid::PostEditChangeProperty(FPropertyChangedEvent& propertyChangedEvent)
 {
-	Super::PostEditChangeProperty(PropertyChangedEvent);
+	Super::PostEditChangeProperty(propertyChangedEvent);
 
 	RowsWithBuffer = Rows + 4;
-}
-#endif // WITH_EDITOR
 
-// Called when the game starts or when spawned
+	InitGridOuter();
+
+	CentreSpringArm();
+}
+#endif
+
+void ATGrid::CentreSpringArm()
+{
+	SpringArm->SetRelativeLocation(BlockSize * FVector(
+		static_cast<float>(Columns) / 2.f,
+		static_cast<float>(Rows) / 2.f,
+		0.f));
+}
+
 void ATGrid::BeginPlay()
 {
 	Super::BeginPlay();
@@ -54,74 +57,69 @@ void ATGrid::BeginPlay()
 	SpawnNewTetromino();
 
 	GetWorld()->GetFirstPlayerController()->SetViewTarget(this);
-	SpringArm->SetRelativeLocation(FVector(((float)Columns / 2.0f),
-		((float)Rows / 2.0f), 0.0f) * BlockSize);
+
+	CentreSpringArm();
 }
 
 void ATGrid::InitGrid()
 {
 	CellCount = Rows * Columns;
+	Blocks.Empty();
 	Blocks.Reserve(CellCount);
 
-	for (int32 RowIndex = 0; RowIndex < Rows; RowIndex++)
+	for (int32 rowIndex = 0; rowIndex < Rows; rowIndex++)
 	{
-		for (int32 ColumnIndex = 0; ColumnIndex < Columns; ColumnIndex++)
+		for (int32 columnIndex = 0; columnIndex < Columns; columnIndex++)
 		{
-			FVector Location = FVector(RowIndex, ColumnIndex, 0.0f) * BlockSize;
-			FTransform Transform = FTransform(FQuat::Identity, Location, FVector::ZeroVector);
-			Blocks.Emplace(Transform);
-
-			BlocksVisuals->AddInstanceWorldSpace(Blocks.Last());
+			FVector location = FVector(rowIndex, columnIndex, 0.f) * BlockSize;
+			FTransform transform = FTransform(FQuat::Identity, location, FVector::ZeroVector);
+			Blocks.Emplace(transform);
 		}
 	}
+
+	BlocksVisuals->ClearInstances();
+	BlocksVisuals->AddInstances(Blocks, false, true);
 }
 
 void ATGrid::InitGridOuter()
 {
-	Blocks.Reserve(2 * Rows + Columns);
+	BlocksOuter.Empty();
+	BlocksOuter.Reserve(2 * Rows + Columns);
 
-	for (int32 Y = 0; Y < Rows; Y++)
+	for (int32 y = 0; y < Rows; y++)
 	{
-		FVector Location = FVector(-BlockSize, BlockSize * Y, 0.0f);
-		FTransform Transform = FTransform(FQuat::Identity, Location, FVector(1.001f));
-		Blocks.Emplace(Transform);
-
-		BlocksVisuals->AddInstanceWorldSpace(Blocks.Last());
+		const FVector location = FVector(-BlockSize, BlockSize * y, 0.f);
+		const FTransform transform = FTransform(FQuat::Identity, location, FVector(1.001f));
+		BlocksOuter.Emplace(transform);
 	}
 
-	for (int32 Y = 0; Y < Rows; Y++)
+	for (int32 y = 0; y < Rows; y++)
 	{
-		FVector Location = FVector(((float)Columns) * BlockSize, BlockSize * Y,  0.0f);
-		FTransform Transform = FTransform(FQuat::Identity, Location, FVector(1.001f));
-		Blocks.Emplace(Transform);
-
-		BlocksVisuals->AddInstanceWorldSpace(Blocks.Last());
+		const FVector location = FVector(static_cast<float>(Columns) * BlockSize, BlockSize * y, 0.f);
+		const FTransform transform = FTransform(FQuat::Identity, location, FVector(1.001f));
+		BlocksOuter.Emplace(transform);
 	}
 
-	for (int32 X = -1; X < Columns+1; X++)
+	for (int32 x = -1; x < Columns+1; x++)
 	{
-		FVector Location = FVector(BlockSize * X, ((float)Rows) * BlockSize, 0.0f);
-		FTransform Transform = FTransform(FQuat::Identity, Location, FVector(1.001f));
-		Blocks.Emplace(Transform);
-
-		BlocksVisuals->AddInstanceWorldSpace(Blocks.Last());
+		const FVector location = FVector(BlockSize * x, static_cast<float>(Rows) * BlockSize, 0.f);
+		const FTransform transform = FTransform(FQuat::Identity, location, FVector(1.001));
+		BlocksOuter.Emplace(transform);
 	}
+
+	OuterGridVisual->ClearInstances();
+	OuterGridVisual->AddInstances(BlocksOuter, false, true);
 }
 
 void ATGrid::SpawnNewTetromino()
 {
-	/*ATTetromino* TTetromino = GetWorld()->SpawnActor<ATTetromino>(TetrominoBP, SpawnLocation, FRotator(0.0f));*/
+	/*ATTetromino* TTetromino = GetWorld()->SpawnActor<ATTetromino>(TetrominoBP, SpawnLocation, FRotator(0.f));*/
 	// TODO: Current hack
-	
+
 	TTetromino = Cast<ATTetromino>(GetWorld()->GetFirstPlayerController()->GetPawn());
-	if (TTetromino)
-	{
-		TTetromino->SpawnTetromino(Columns, this);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Tetromino cast failed!"));
-	}
+	ensure(IsValid(TTetromino));
+
+	TTetromino->SpawnTetromino(Columns, this);
 
 	// Might want to use Deferred Spawning to wait for spawning until InitCustom is finished, but not necessary when spawning BPs
 
@@ -134,20 +132,20 @@ void ATGrid::SpawnNewTetromino()
 	//}
 }
 
-bool ATGrid::IsMoveHorizontalValid(const TArray<FTransform> TetrominoBlocks) const
+bool ATGrid::IsMoveHorizontalValid(const TArray<FTransform> tetrominoBlocks) const
 {
-	for(const FTransform& TetrominoBlock : TetrominoBlocks)
+	for(const FTransform& tetrominoBlock : tetrominoBlocks)
 	{
-		FIntPoint TetrominoInstanceGridPosition = FIntPoint(
-			FMath::RoundToInt(TetrominoBlock.GetLocation().X / BlockSize),
-			FMath::RoundToInt(TetrominoBlock.GetLocation().Y / BlockSize));
-		
-		if(IsBlockOutOfBoundsVertical(TetrominoInstanceGridPosition.X))
+		const FIntPoint tetrominoInstanceGridPosition = FIntPoint(
+			FMath::RoundToInt(tetrominoBlock.GetLocation().X / BlockSize),
+			FMath::RoundToInt(tetrominoBlock.GetLocation().Y / BlockSize));
+
+		if(IsBlockOutOfBoundsVertical(tetrominoInstanceGridPosition.X))
 		{
 			return false;
 		}
 
-		if(IsBlockOnTopOfGridBlock(TetrominoInstanceGridPosition))
+		if(IsBlockOnTopOfGridBlock(tetrominoInstanceGridPosition))
 		{
 			return false;
 		}
@@ -156,20 +154,20 @@ bool ATGrid::IsMoveHorizontalValid(const TArray<FTransform> TetrominoBlocks) con
 	return true;
 }
 
-bool ATGrid::IsMoveDownValid(const TArray<FTransform> TetrominoBlocks) const
+bool ATGrid::IsMoveDownValid(const TArray<FTransform> tetrominoBlocks) const
 {
-	for(const FTransform& TetrominoBlock : TetrominoBlocks)
+	for(const FTransform& tetrominoBlock : tetrominoBlocks)
 	{
-		FIntPoint TetrominoInstanceGridPosition = FIntPoint(
-			FMath::RoundToInt(TetrominoBlock.GetLocation().X / BlockSize),
-			FMath::RoundToInt(TetrominoBlock.GetLocation().Y / BlockSize));
-		
-		if(IsBlockBelowGround(TetrominoInstanceGridPosition.Y))
+		const FIntPoint tetrominoInstanceGridPosition = FIntPoint(
+			FMath::RoundToInt(tetrominoBlock.GetLocation().X / BlockSize),
+			FMath::RoundToInt(tetrominoBlock.GetLocation().Y / BlockSize));
+
+		if(IsBlockBelowGround(tetrominoInstanceGridPosition.Y))
 		{
 			return false;
 		}
 
-		if(IsBlockOnTopOfGridBlock(TetrominoInstanceGridPosition))
+		if(IsBlockOnTopOfGridBlock(tetrominoInstanceGridPosition))
 		{
 			return false;
 		}
@@ -178,25 +176,25 @@ bool ATGrid::IsMoveDownValid(const TArray<FTransform> TetrominoBlocks) const
 	return true;
 }
 
-bool ATGrid::IsRotationValid(const TArray<FTransform> TetrominoBlocks) const
+bool ATGrid::IsRotationValid(const TArray<FTransform> tetrominoBlocks) const
 {
-	for(const FTransform& TetrominoBlock : TetrominoBlocks)
+	for(const FTransform& tetrominoBlock : tetrominoBlocks)
 	{
-		FIntPoint TetrominoInstanceGridPosition = FIntPoint(
-			FMath::RoundToInt(TetrominoBlock.GetLocation().X / BlockSize),
-			FMath::RoundToInt(TetrominoBlock.GetLocation().Y / BlockSize));
-		
-		if(IsBlockOutOfBoundsVertical(TetrominoInstanceGridPosition.X))
+		const FIntPoint tetrominoInstanceGridPosition = FIntPoint(
+			FMath::RoundToInt(tetrominoBlock.GetLocation().X / BlockSize),
+			FMath::RoundToInt(tetrominoBlock.GetLocation().Y / BlockSize));
+
+		if(IsBlockOutOfBoundsVertical(tetrominoInstanceGridPosition.X))
 		{
 			return false;
 		}
 
-		if(IsBlockBelowGround(TetrominoInstanceGridPosition.Y))
+		if(IsBlockBelowGround(tetrominoInstanceGridPosition.Y))
 		{
 			return false;
 		}
-		
-		if(IsBlockOnTopOfGridBlock(TetrominoInstanceGridPosition))
+
+		if(IsBlockOnTopOfGridBlock(tetrominoInstanceGridPosition))
 		{
 			return false;
 		}
@@ -205,39 +203,39 @@ bool ATGrid::IsRotationValid(const TArray<FTransform> TetrominoBlocks) const
 	return true;
 }
 
-bool ATGrid::IsBlockOutOfBoundsVertical(int32 TetrominoInstanceGridPositionX) const
+bool ATGrid::IsBlockOutOfBoundsVertical(const int32 tetrominoInstanceGridPositionX) const
 {
-	return ((TetrominoInstanceGridPositionX < 0) || (TetrominoInstanceGridPositionX > Columns-1));
+	return tetrominoInstanceGridPositionX < 0 || tetrominoInstanceGridPositionX > Columns-1;
 }
 
-bool ATGrid::IsBlockBelowGround(int32 TetrominoInstanceGridPositionY) const
+bool ATGrid::IsBlockBelowGround(const int32 tetrominoInstanceGridPositionY) const
 {
-	return (TetrominoInstanceGridPositionY > Rows-1);
+	return tetrominoInstanceGridPositionY > Rows-1;
 }
 
-bool ATGrid::IsBlockOnTopOfGridBlock(FIntPoint TetrominoInstanceGridPosition) const
+bool ATGrid::IsBlockOnTopOfGridBlock(const FIntPoint& tetrominoInstanceGridPosition) const
 {
-	int32 GridIndex = FindIndex(TetrominoInstanceGridPosition);
+	const int32 gridIndex = FindIndex(tetrominoInstanceGridPosition);
 
-	return IsGridBlockVisible(GridIndex);
+	return IsGridBlockVisible(gridIndex);
 }
 
-bool ATGrid::IsGridBlockVisible(int32 Index) const
+bool ATGrid::IsGridBlockVisible(const int32 index) const
 {
-	const bool IsScaleZero = (FMath::IsNearlyZero(Blocks[Index].GetScale3D().SizeSquared())) ? true : false;
-	return !IsScaleZero;
+	const bool isScaleZero = FMath::IsNearlyZero(Blocks[index].GetScale3D().SizeSquared()) ? true : false;
+	return !isScaleZero;
 }
 
-void ATGrid::AddToGrid(const TArray<FTransform> TetrominoBlocks)
+void ATGrid::AddToGrid(const TArray<FTransform> tetrominoBlocks)
 {
-	for(const FTransform& TetrominoBlock : TetrominoBlocks)
+	for(const FTransform& tetrominoBlock : tetrominoBlocks)
 	{
-		FIntPoint TetrominoInstanceGridPosition = FIntPoint(
-			FMath::RoundToInt(TetrominoBlock.GetLocation().X / BlockSize),
-			FMath::RoundToInt(TetrominoBlock.GetLocation().Y / BlockSize));
-		
-		int32 Index = FindIndex(TetrominoInstanceGridPosition);
-		Blocks[Index] = TetrominoBlock;
+		const FIntPoint tetrominoInstanceGridPosition = FIntPoint(
+			FMath::RoundToInt(tetrominoBlock.GetLocation().X / BlockSize),
+			FMath::RoundToInt(tetrominoBlock.GetLocation().Y / BlockSize));
+
+		const int32 index = FindIndex(tetrominoInstanceGridPosition);
+		Blocks[index] = tetrominoBlock;
 	}
 
 	CheckGridForFullLines();
@@ -246,14 +244,13 @@ void ATGrid::AddToGrid(const TArray<FTransform> TetrominoBlocks)
 
 void ATGrid::CheckGridForFullLines()
 {
-	// TODO(Ninjin42): Only check the rows near the Tetromino position instead of the whole array
-	for(int32 Y = 0; Y < Rows; Y++)
+	// TODO(Ninjin): Only check the rows near the Tetromino position instead of the whole array
+	for(int32 y = 0; y < Rows; y++)
 	{
 		bool bFullLine = true;
-		int32 X = 0;
-		for(X; X < Columns; X++)
+		for(int32 x = 0; x < Columns; x++)
 		{
-			if(!(IsGridBlockVisible(FindIndex(FIntPoint(X, Y)))))
+			if(!IsGridBlockVisible(FindIndex(FIntPoint(x, y))))
 			{
 				bFullLine = false;
 				break;
@@ -262,42 +259,42 @@ void ATGrid::CheckGridForFullLines()
 
 		if(bFullLine)
 		{
-			DeleteRow(Y);
+			DeleteRow(y);
 		}
 	}
 	UpdateInstances(Blocks);
 }
 
-void ATGrid::DeleteRow(int32 Y)
+void ATGrid::DeleteRow(const int32 y)
 {
-	int32 IndexStart = FindIndex(FIntPoint(0, Y));
-	Blocks.RemoveAt(IndexStart, Columns, true);
+	const int32 indexStart = FindIndex(FIntPoint(0, y));
+	Blocks.RemoveAt(indexStart, Columns, true);
 
-	for(int32 Index = IndexStart-1; Index > -1; Index--)
+	for(int32 index = indexStart-1; index > -1; index--)
 	{
-		Blocks[Index].SetLocation(Blocks[Index].GetLocation() + FVector(0.0f, BlockSize, 0.0f));
+		Blocks[index].SetLocation(Blocks[index].GetLocation() + FVector(0.f, BlockSize, 0.f));
 	}
 
-	for(int32 X = Columns-1; X > -1; X--)
+	for(int32 x = Columns-1; x > -1; x--)
 	{
-		const FVector Location = FVector(X, Y, 0.0f) * BlockSize;
-		const FTransform Transform = FTransform(FQuat::Identity, Location, FVector::ZeroVector);
-		Blocks.Insert(Transform, 0);
+		const FVector location = FVector(x, y, 0.f) * BlockSize;
+		const FTransform transform = FTransform(FQuat::Identity, location, FVector::ZeroVector);
+		Blocks.Insert(transform, 0);
 	}
 
 }
 
-int32 ATGrid::FindIndex(FIntPoint GridPosition) const
+int32 ATGrid::FindIndex(const FIntPoint& gridPosition) const
 {
-	return GridPosition.Y * Columns + GridPosition.X;
+	return gridPosition.Y * Columns + gridPosition.X;
 }
 
 void ATGrid::UpdateInstances(TArray<FTransform> BlocksCur)
 {
-	int32 BlocksCount = BlocksCur.Num();
-	for (int32 BlockIndex = 0; BlockIndex < BlocksCount; BlockIndex++)
+	const int32 blocksCount = BlocksCur.Num();
+	for (int32 blockIndex = 0; blockIndex < blocksCount; blockIndex++)
 	{
-		BlocksVisuals->UpdateInstanceTransform(BlockIndex, BlocksCur[BlockIndex], true);
+		BlocksVisuals->UpdateInstanceTransform(blockIndex, BlocksCur[blockIndex], true);
 	}
 	BlocksVisuals->UpdateInstanceTransform(0, BlocksCur[0], true, true);
 }

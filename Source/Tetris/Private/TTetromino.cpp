@@ -1,21 +1,18 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Tetris/Public/TTetromino.h"
+
+#include "TTetrominoData.h"
 #include "Components/InputComponent.h"
 #include "Classes/Components/InstancedStaticMeshComponent.h"
 #include "Tetris/Public/TGrid.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "Engine/Classes/Kismet/GameplayStatics.h"
 
 const FName ATTetromino::MoveRightName = FName(TEXT("MoveRight"));
 const FName ATTetromino::MoveUpName = FName(TEXT("MoveUp"));
 const FString ATTetromino::ContextString = FString(TEXT("TetrominoData Context"));
 
-
-// Sets default values
 ATTetromino::ATTetromino()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
@@ -23,24 +20,11 @@ ATTetromino::ATTetromino()
 	SetRootComponent(BlocksVisuals);
 	BlocksVisuals->SetUsingAbsoluteRotation(true);
 
-	BlockSize = 100.0f;
-	DropSpeed = 3.0f;
-	MoveSpeed = 9.0f;
-	RotationSpeed = 3.0f;
-
 	// Whenever a tetromino is spawned, instantly give the player control over it
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 	AutoReceiveInput = EAutoReceiveInput::Player0;
 }
 
-#if WITH_EDITOR
-void ATTetromino::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-}
-#endif // WITH_EDITOR
-
-// Called to bind functionality to input
 void ATTetromino::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -51,7 +35,7 @@ void ATTetromino::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("MoveRight", IE_Pressed, this, &ATTetromino::MoveRightPressed);
 	PlayerInputComponent->BindAction("MoveRight", IE_Released, this, &ATTetromino::MoveRightReleased);
 	PlayerInputComponent->BindAction("MoveLeft", IE_Pressed, this, &ATTetromino::MoveLeftPressed);
-	PlayerInputComponent->BindAction("Moveleft", IE_Released, this, &ATTetromino::MoveLefttReleased);
+	PlayerInputComponent->BindAction("MoveLeft", IE_Released, this, &ATTetromino::MoveLeftReleased);
 	PlayerInputComponent->BindAction("MoveDown", IE_Pressed, this, &ATTetromino::MoveDownPressed);
 	PlayerInputComponent->BindAction("MoveDown", IE_Released, this, &ATTetromino::MoveDownReleased);
 	PlayerInputComponent->BindAction("RotateClockwise", IE_Pressed, this, &ATTetromino::RotateClockwisePressed);
@@ -65,8 +49,8 @@ void ATTetromino::DropPressed()
 void ATTetromino::MoveRightPressed()
 {
 	MoveRight = true;
-	HorizontalInputTime = 0.0f;
-	CheckAndMoveHorizontal(1.0f);
+	HorizontalInputTime = 0.f;
+	CheckAndMoveHorizontal(1.f);
 }
 void ATTetromino::MoveRightReleased()
 {
@@ -75,17 +59,17 @@ void ATTetromino::MoveRightReleased()
 void ATTetromino::MoveLeftPressed()
 {
 	MoveLeft = true;
-	HorizontalInputTime = 0.0f;
-	CheckAndMoveHorizontal(-1.0f);
+	HorizontalInputTime = 0.f;
+	CheckAndMoveHorizontal(-1.f);
 }
-void ATTetromino::MoveLefttReleased()
+void ATTetromino::MoveLeftReleased()
 {
 	MoveLeft = false;
 }
 void ATTetromino::MoveDownPressed()
 {
 	MoveDown = true;
-	DropInputTime = 0.0f;
+	DropInputTime = 0.f;
 	CheckAndMoveDown();
 }
 void ATTetromino::MoveDownReleased()
@@ -95,8 +79,8 @@ void ATTetromino::MoveDownReleased()
 void ATTetromino::RotateClockwisePressed()
 {
 	RotateClockwise = true;
-	RotationInputTime = 0.0f;
-	CheckAndRotate(1.0f);
+	RotationInputTime = 0.f;
+	CheckAndRotate(1.f);
 }
 void ATTetromino::RotateClockwiseReleased()
 {
@@ -105,8 +89,8 @@ void ATTetromino::RotateClockwiseReleased()
 void ATTetromino::RotateCounterClockwisePressed()
 {
 	RotateCounterClockwise = true;
-	RotationInputTime = 0.0f;
-	CheckAndRotate(-1.0f);
+	RotationInputTime = 0.f;
+	CheckAndRotate(-1.f);
 }
 void ATTetromino::RotateCounterClockwiseReleased()
 {
@@ -120,56 +104,61 @@ void ATTetromino::BeginPlay()
 	SpawnStream = FRandomStream(FMath::Rand());
 }
 
-void ATTetromino::SpawnTetromino(int32 GridColumns, ATGrid* GridNew)
+void ATTetromino::SpawnTetromino(const int32 gridColumns, ATGrid* gridNew)
 {
 	TArray<FName> RowNames = TetrominoDataTable->GetRowNames();
-	int32 RowCount = RowNames.Num();
+	const int32 rowCount = RowNames.Num();
 
-	int32 TetrominoRandomFromDataTable = SpawnStream.RandRange(0, RowCount-1);
+	const int32 tetrominoRandomFromDataTable = SpawnStream.RandRange(0, rowCount-1);
 	// TODO: Check if struct pointer is not handled by garbage collection
-	FTetrominoData* TetrominoData = TetrominoDataTable->FindRow<FTetrominoData>(RowNames[TetrominoRandomFromDataTable], ContextString, true);
+	const FTetrominoData* const tetrominoData = TetrominoDataTable->FindRow<FTetrominoData>(RowNames[tetrominoRandomFromDataTable], ContextString, true);
 
-	ScaleFromColor = FVector::OneVector + (FVector(TetrominoData->Color) / 1000.0f);
-	RotationRule = TetrominoData->RotationRule;
+	ScaleFromColor = FVector::OneVector + (FVector(tetrominoData->Color) / 1000.f);
+	RotationRule = tetrominoData->RotationRule;
 
 	// TODO: Might as well ask the designer to input rows/columns directly
-	BlocksDimension = FMath::RoundToInt(FMath::Sqrt((float)(TetrominoData->Blocks.Num())));
+	BlocksDimension = FMath::RoundToInt(FMath::Sqrt(static_cast<float>(tetrominoData->Blocks.Num())));
 
-	if (TetrominoData->Blocks.Num() % BlocksDimension != 0)
+	if (!ensureMsgf(tetrominoData->Blocks.Num() % BlocksDimension == 0, TEXT("Make sure every TetrominoShape has n*n cells!")))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Make sure every TetrominoShape has n*n cells!"));
+		return;
 	}
 
 	// If column half is x.5, floor to prefer left side spawn
-	const float SpawnLocationX = FMath::FloorToFloat(((float)(GridColumns-1)) / 2.0f)
-		- FMath::FloorToFloat(((float)BlocksDimension) / 2.0f);
+	const float spawnLocationX =
+		FMath::FloorToFloat(static_cast<float>(gridColumns-1) / 2.f) -
+		FMath::FloorToFloat(static_cast<float>(BlocksDimension) / 2.f);
 
-	const FVector SpawnLocation = FVector(SpawnLocationX, 0.0f, 0.0f);
+	const FVector SpawnLocation = FVector(spawnLocationX, 0.f, 0.f);
 
-	float PivotLocationWorldX = FMath::FloorToFloat(((float)(GridColumns-1)) / 2.0f)
-		- ((BlocksDimension % 2 == 1) ? 0.0f : 0.5f);
-	float PivotLocationWorldY = ((float)(BlocksDimension-1)) / 2.0f;
-	PivotLocationWorld = FVector(PivotLocationWorldX, PivotLocationWorldY, 0.0f) * BlockSize;
+	const float pivotLocationWorldX =
+		FMath::FloorToFloat(static_cast<float>(gridColumns-1) / 2.f) -
+		(BlocksDimension % 2 == 1 ? 0.f : 0.5f);
+
+	const float pivotLocationWorldY = static_cast<float>(BlocksDimension-1) / 2.f;
+
+	PivotLocationWorld = FVector(pivotLocationWorldX, pivotLocationWorldY, 0.f) * BlockSize;
 
 	Blocks.Empty();
 	Blocks.Reserve(FMath::Square(BlocksDimension));
-	BlocksVisuals->ClearInstances();
-	for (int32 Y = 0; Y < BlocksDimension; Y++)
+	for (int32 y = 0; y < BlocksDimension; y++)
 	{
-		for (int32 X = 0; X < BlocksDimension; X++)
+		for (int32 x = 0; x < BlocksDimension; x++)
 		{
-			if (TetrominoData->Blocks[Y * BlocksDimension + X] == true)
+			if (tetrominoData->Blocks[y * BlocksDimension + x] == true)
 			{
-				const FVector LocationTetroGrid = FVector((float)X, (float)Y, 0.0f);
-				const FVector LocationWorld = (LocationTetroGrid + SpawnLocation) * BlockSize;
-				Blocks.Emplace(FTransform(FQuat::Identity, LocationWorld, ScaleFromColor));
-				BlocksVisuals->AddInstanceWorldSpace(Blocks.Last());
+				const FVector locationTetroGrid = FVector(static_cast<float>(x), static_cast<float>(y), 0.f);
+				const FVector locationWorld = (locationTetroGrid + SpawnLocation) * BlockSize;
+				Blocks.Emplace(FTransform(FQuat::Identity, locationWorld, ScaleFromColor));
 			}
 		}
 	}
 
-	Grid = GridNew;
-	bool bGameOver = !(Grid->IsMoveDownValid(Blocks));
+	BlocksVisuals->ClearInstances();
+	BlocksVisuals->AddInstances(Blocks, false, true);
+
+	Grid = gridNew;
+	const bool bGameOver = !Grid->IsMoveDownValid(Blocks);
 	if (bGameOver)
 	{
 		SetActorTickEnabled(false);
@@ -186,154 +175,146 @@ void ATTetromino::Tick(float DeltaTime)
 
 	UpdateInputTimers(DeltaTime);
 
-	UKismetSystemLibrary::DrawDebugPoint(GetWorld(), PivotLocationWorld + FVector(0.0f, 0.0f, BlockSize), 5.0f, FLinearColor::Green);
+	// UKismetSystemLibrary::DrawDebugPoint(GetWorld(), PivotLocationWorld + FVector(0.f, 0.f, BlockSize), 5.f, FLinearColor::Green);
 }
 
 // TODO: Refactor, remove code duplication
-void ATTetromino::UpdateInputTimers(float DeltaTime)
+void ATTetromino::UpdateInputTimers(float deltaTime)
 {
 	if (MoveRight != MoveLeft)
 	{
-		float MoveDirection;
+		float moveDirection;
 
 		if (MoveRight)
 		{
-			HorizontalInputTime += DeltaTime * MoveSpeed;
-			MoveDirection = 1.0f;
+			HorizontalInputTime += deltaTime * MoveSpeed;
+			moveDirection = 1.f;
 		}
 		else
 		{
-			HorizontalInputTime += DeltaTime * MoveSpeed;
-			MoveDirection = -1.0f;
+			HorizontalInputTime += deltaTime * MoveSpeed;
+			moveDirection = -1.f;
 		}
 
-		if (HorizontalInputTime > 1.0f)
+		if (HorizontalInputTime > 1.f)
 		{
-			HorizontalInputTime = 0.0f;
-			CheckAndMoveHorizontal(MoveDirection);
+			HorizontalInputTime = 0.f;
+			CheckAndMoveHorizontal(moveDirection);
 		}
 	}
 
 	if (RotateClockwise != RotateCounterClockwise)
 	{
-		float MoveDirection;
+		float moveDirection;
 
 		if (RotateClockwise)
 		{
-			RotationInputTime += DeltaTime * RotationSpeed;
-			MoveDirection = 1.0f;
+			RotationInputTime += deltaTime * RotationSpeed;
+			moveDirection = 1.f;
 		}
 		else
 		{
-			RotationInputTime += DeltaTime * RotationSpeed;
-			MoveDirection = -1.0f;
+			RotationInputTime += deltaTime * RotationSpeed;
+			moveDirection = -1.f;
 		}
 
-		if (RotationInputTime > 1.0f)
+		if (RotationInputTime > 1.f)
 		{
-			RotationInputTime = 0.0f;
-			CheckAndRotate(MoveDirection);
+			RotationInputTime = 0.f;
+			CheckAndRotate(moveDirection);
 		}
 	}
 
 	if (MoveDown)
 	{
-		DropInputTime += DeltaTime * MoveSpeed;
+		DropInputTime += deltaTime * MoveSpeed;
 	}
 	else
 	{
-		DropInputTime += DeltaTime * DropSpeed;
+		DropInputTime += deltaTime * DropSpeed;
 	}
 
-	if (DropInputTime > 1.0f)
+	if (DropInputTime > 1.f)
 	{
-		DropInputTime = 0.0f;
+		DropInputTime = 0.f;
 		CheckAndMoveDown();
 	} 
 }
 
-void ATTetromino::CheckAndMoveHorizontal(float Direction)
+void ATTetromino::CheckAndMoveHorizontal(float direction)
 {
-	FVector MoveDirection = FVector(BlockSize * Direction, 0.0f, 0.0f);
-	for (FTransform& Block : Blocks)
+	const FVector moveDirection = FVector(BlockSize * direction, 0.f, 0.f);
+	for (FTransform& block : Blocks)
 	{
-		Block.SetLocation(Block.GetLocation() + MoveDirection);
+		block.SetLocation(block.GetLocation() + moveDirection);
 	}
 
-	bool bAllowMove = Grid->IsMoveHorizontalValid(Blocks);
+	const bool bAllowMove = Grid->IsMoveHorizontalValid(Blocks);
 	if (bAllowMove)
 	{
-		PivotLocationWorld += MoveDirection;
-		UpdateInstances();
+		PivotLocationWorld += moveDirection;
+		BlocksVisuals->BatchUpdateInstancesTransforms(0, Blocks, true, true, true);
 	}
 	else
 	{
-		for (FTransform& Block : Blocks)
+		for (FTransform& block : Blocks)
 		{
-			Block.SetLocation(Block.GetLocation() - MoveDirection);
+			block.SetLocation(block.GetLocation() - moveDirection);
 		}
 	}
 }
 
-void ATTetromino::CheckAndRotate(float Direction)
+void ATTetromino::CheckAndRotate(float direction)
 {
-	for (FTransform& Block : Blocks)
+	for (FTransform& block : Blocks)
 	{
-		FVector RotationPivot = Block.GetLocation() - PivotLocationWorld;
-		FQuat Rotation = FQuat::MakeFromEuler(FVector(0.0f, 0.0f, Direction * 90.0f));
-		FVector RotationVector = UKismetMathLibrary::Quat_RotateVector(Rotation, RotationPivot);
-		FVector NewVector = PivotLocationWorld + RotationVector;
-		Block.SetLocation(NewVector);
+		const FVector rotationPivot = block.GetLocation() - PivotLocationWorld;
+		const FQuat rotation = FQuat::MakeFromEuler(FVector(0.f, 0.f, direction * 90.f));
+		const FVector rotationVector = rotation.RotateVector(rotationPivot);
+		// FVector rotationVector = UKismetMathLibrary::Quat_RotateVector(rotation, rotationPivot);
+		const FVector newVector = PivotLocationWorld + rotationVector;
+		block.SetLocation(newVector);
 	}
 
-	bool bAllowMove = Grid->IsRotationValid(Blocks);
+	const bool bAllowMove = Grid->IsRotationValid(Blocks);
 	if (bAllowMove)
 	{
-		UpdateInstances();
+		BlocksVisuals->BatchUpdateInstancesTransforms(0, Blocks, true, true, true);
 	}
 	else
 	{
-		for (FTransform& Block : Blocks)
+		for (FTransform& block : Blocks)
 		{
-			FVector RotationPivot = Block.GetLocation() - PivotLocationWorld;
-			FQuat Rotation = FQuat::MakeFromEuler(FVector(0.0f, 0.0f, -Direction * 90.0f));
-			FVector RotationVector = UKismetMathLibrary::Quat_RotateVector(Rotation, RotationPivot);
-			FVector NewVector = PivotLocationWorld + RotationVector;
-			Block.SetLocation(NewVector);
+			const FVector rotationPivot = block.GetLocation() - PivotLocationWorld;
+			const FQuat rotation = FQuat::MakeFromEuler(FVector(0.f, 0.f, -direction * 90.f));
+			const FVector rotationVector = rotation.RotateVector(rotationPivot);
+			// FVector rotationVector = UKismetMathLibrary::Quat_RotateVector(rotation, rotationPivot);
+			const FVector newVector = PivotLocationWorld + rotationVector;
+			block.SetLocation(newVector);
 		}
 	}
 }
 
 void ATTetromino::CheckAndMoveDown()
 {
-	FVector MoveDirection = FVector(0.0f, BlockSize, 0.0f);
-	for (FTransform& Block : Blocks)
+	const FVector moveDirection = FVector(0.f, BlockSize, 0.f);
+	for (FTransform& block : Blocks)
 	{
-		Block.SetLocation(Block.GetLocation() + MoveDirection);
+		block.SetLocation(block.GetLocation() + moveDirection);
 	}
 
-	bool AllowMove = Grid->IsMoveDownValid(Blocks);
-	if (AllowMove)
+	const bool allowMove = Grid->IsMoveDownValid(Blocks);
+	if (allowMove)
 	{
-		PivotLocationWorld += MoveDirection;
-		UpdateInstances();
+		PivotLocationWorld += moveDirection;
+		BlocksVisuals->BatchUpdateInstancesTransforms(0, Blocks, true, true, true);
 	}
 	else
 	{
-		for (FTransform& Block : Blocks)
+		for (FTransform& block : Blocks)
 		{
-			Block.SetLocation(Block.GetLocation() - MoveDirection);
+			block.SetLocation(block.GetLocation() - moveDirection);
 		}
 		Grid->AddToGrid(Blocks);
 	}
-}
-
-void ATTetromino::UpdateInstances()
-{
-	int32 BlocksCount = Blocks.Num();
-	for (int32 BlockIndex = 0; BlockIndex < BlocksCount; BlockIndex++)
-	{
-		BlocksVisuals->UpdateInstanceTransform(BlockIndex, Blocks[BlockIndex], true);
-	}
-	BlocksVisuals->UpdateInstanceTransform(0, Blocks[0], true, true);
 }
